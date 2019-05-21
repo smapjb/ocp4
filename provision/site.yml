@@ -1,0 +1,107 @@
+---
+- name: This is a playbook for cloning a vm in RHEV
+  hosts: localhost
+  gather_facts: False
+  vars:
+    machine_state: present
+    host_memory: 8
+    hostname_prefix: worker
+    sockets: 2
+    wait_for_ip: True
+    vm_infra_wait_for_ip_retries: 100
+    vm_infra_wait_for_ip_delay: 5
+    disk_size: 8
+
+  tasks:
+    - block:
+      - include_vars: ../ovirt_Password.yml
+      
+      - name: Obtain SSO token using username/password creds.
+        ovirt_auth:
+          url: https://rhvm.internal.croftvillas.com/ovirt-engine/api
+          username: admin@internal
+          ca_file: ../pki-resource.cer
+          password: "{{ ovirt_password }}"
+
+      - name: Add an additional disk to the VM
+        ovirt_disk:
+          auth: "{{ ovirt_auth }}"
+          name: "{{ hostname_prefix }}_disk"
+          size: "{{ disk_size }}GiB"
+          storage_domain: QNAP_SD
+          interface: virtio
+        register: new_disks
+    
+
+      - name: This task clones a machine in RHEV
+        ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          cluster: "Cluster01"
+          name: "{{ hostname_prefix }}.internal.croftvillas.com"
+          wait: True
+          memory: "{{ host_memory }}GiB"
+          cpu_sockets: "{{ sockets }}"
+          kernel_path: "iso://rhcos-410.8.20190509.3-installer-kernel"
+          initrd_path: "iso:///rhcos-410.8.20190509.3-installer-initramfs.img"
+          kernel_params: "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://gateway/rhcos-uefi.gz coreos.inst.ignition_url=http://gateway/worker.ign"
+          kernel_params_persist: yes
+          type: server
+          operating_system: "rhel_8x64"
+          disks:
+            - name: "{{ hostname_prefix }}_disk"
+          nics: 
+            - name: nic1
+              profile_name: "ovirtmgmt"
+        register: new_vms
+
+      - name: 'Debug'
+        debug:
+          var:  new_vms
+
+#      - name: Wait for VMs IP
+#        ovirt_vms_facts:
+#          auth: "{{ ovirt_auth }}"
+#          pattern: "name={{ item }}.internal.croftvillas.com"
+#          fetch_nested: true
+#          nested_attributes: ips
+#        with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="{{ hostname_prefix }}%02d"
+#        until: "ovirt_vms | first | json_query(query) | ipv4"
+#        retries: "{{ vm_infra_wait_for_ip_retries }}"
+#        delay: "{{ vm_infra_wait_for_ip_delay }}"
+#        vars:
+#          query: "reported_devices[*].ips[?version=='v4'].address"
+#          #query: "reported_devices[*].ips[*].address"
+#        when:
+#          - "wait_for_ip"
+#          - "machine_state == 'running'"
+#
+
+    #  - name: Add an additional disk to the VM
+    #    ovirt_disk:
+    #      auth: "{{ ovirt_auth }}"
+    #      vm_name: "{{ item }}.internal.croftvillas.com"
+    #      name: "{{ item }}_ExtraDisk"
+    #      state: running
+    #      size: "{{ extra_space }}GiB"
+    #      storage_domain: QNAP_SD
+    #      interface: virtio
+    #    async: '300'
+    #    poll: '0'
+    #    with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="{{ hostname_prefix }}%02d"
+    #    when: disk_added == "True" and machine_state == "running"
+    #    register: new_disks
+        
+    #  - name: Check disk creation status
+    #    async_status: jid={{ item.ansible_job_id }}
+    #    register: job_result
+    #    until: job_result.finished
+    #    retries: 100
+    #    delay: 15
+    #    with_items: "{{ new_disks.results }}"
+    #    when: disk_added == "True" and machine_state == "running"
+
+      always:
+      - name: Always revoke the SSO token
+        ovirt_auth:
+          state: absent
+          ovirt_auth: "{{ ovirt_auth }}"
