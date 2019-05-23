@@ -45,6 +45,8 @@
           initrd_path: "iso:///rhcos-410.8.20190509.3-installer-initramfs.img"
           kernel_params: "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://gateway/rhcos-uefi.gz coreos.inst.ignition_url=http://gateway/worker.ign"
           kernel_params_persist: yes
+          bios_type: "q35_ovmf"
+          boot_menu: no
           type: server
           operating_system: "rhel_8x64"
           disks:

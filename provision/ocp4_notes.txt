@@ -1,0 +1,20 @@
+http://gateway.internal.croftvillas.com/rhcos-bios.gz
+http://gateway.internal.croftvillas.com/rhcos-uefi.gz
+http://gateway.internal.croftvillas.com/bootstrap.ign
+http://gateway.internal.croftvillas.com/master.ign
+http://gateway.internal.croftvillas.com/worker.ign
+
+
+iso://rhcos-410.8.20190509.3-installer-kernel
+
+iso:///rhcos-410.8.20190509.3-installer-initramfs.img
+
+nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://gateway/rhcos-uefi.gz coreos.inst.ignition_url=http://gateway/bootstrap.ign
+
+nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://gateway/rhcos-uefi.gz coreos.inst.ignition_url=http://gateway/worker.ign
+
+nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://gateway/rhcos-uefi.gz coreos.inst.ignition_url=http://gateway/master.ign
+
+
+
+http://rpmfind.net/linux/centos/7.6.1810/os/x86_64/Packages/qemu-guest-agent-2.12.0-2.el7.x86_64.rpm
