@@ -3,13 +3,11 @@
   hosts: localhost
   gather_facts: False
   vars:
+    gateway: gateway.internal.croftvillas.com
     machine_state: present
     host_memory: 8
-    hostname_prefix: worker
+#    hostname_prefix: rhel
     sockets: 2
-    wait_for_ip: True
-    vm_infra_wait_for_ip_retries: 100
-    vm_infra_wait_for_ip_delay: 5
     disk_size: 8
 
   tasks:
@@ -37,73 +35,119 @@
         ovirt_vm:
           auth: "{{ ovirt_auth }}"
           cluster: "Cluster01"
-          name: "{{ hostname_prefix }}.internal.croftvillas.com"
-          wait: True
+          name: "{{ hostname_prefix }}.ocp4.internal.croftvillas.com"
+          description: ocp4 worker
+          comment: ocp4
+          state: running
           memory: "{{ host_memory }}GiB"
           cpu_sockets: "{{ sockets }}"
           kernel_path: "iso://rhcos-410.8.20190509.3-installer-kernel"
           initrd_path: "iso:///rhcos-410.8.20190509.3-installer-initramfs.img"
           kernel_params: "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://gateway/rhcos-uefi.gz coreos.inst.ignition_url=http://gateway/worker.ign"
           kernel_params_persist: yes
+          fetch_nested: true
+          nested_attributes:
+            - mac
+          graphical_console:
+            protocol: vnc
           bios_type: "q35_ovmf"
-          boot_menu: no
           type: server
           operating_system: "rhel_8x64"
           disks:
             - name: "{{ hostname_prefix }}_disk"
-          nics: 
+          nics:
             - name: nic1
               profile_name: "ovirtmgmt"
         register: new_vms
 
-      - name: 'Debug'
+      - name: extract the mac address of the newly created machine
+        set_fact:
+          mac_address: "{{ new_vms.vm.nics[0].mac.address }}"
+
+      - name: Get leases from Gateway API
+        uri:
+          url: "https://{{ gateway }}:81/api/v1/dhcp/leases"
+          return_content: yes
+          headers:
+             x-api-key: "{{ apikey }}"
+        register: leases
+
+      - name: Debug the this variable
         debug:
-          var:  new_vms
+          var: leases
+          verbosity: 1
 
-#      - name: Wait for VMs IP
-#        ovirt_vms_facts:
-#          auth: "{{ ovirt_auth }}"
-#          pattern: "name={{ item }}.internal.croftvillas.com"
-#          fetch_nested: true
-#          nested_attributes: ips
-#        with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="{{ hostname_prefix }}%02d"
-#        until: "ovirt_vms | first | json_query(query) | ipv4"
-#        retries: "{{ vm_infra_wait_for_ip_retries }}"
-#        delay: "{{ vm_infra_wait_for_ip_delay }}"
-#        vars:
-#          query: "reported_devices[*].ips[?version=='v4'].address"
-#          #query: "reported_devices[*].ips[*].address"
-#        when:
-#          - "wait_for_ip"
-#          - "machine_state == 'running'"
-#
+      - name: find the IP address given to the machine from DHCP
+        set_fact:
+          iface_address: "{{ leases.json.data | dict2items | json_query(query)}}"
+        vars:
+          query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ mac_address }}'].ipv4"
 
-    #  - name: Add an additional disk to the VM
-    #    ovirt_disk:
-    #      auth: "{{ ovirt_auth }}"
-    #      vm_name: "{{ item }}.internal.croftvillas.com"
-    #      name: "{{ item }}_ExtraDisk"
-    #      state: running
-    #      size: "{{ extra_space }}GiB"
-    #      storage_domain: QNAP_SD
-    #      interface: virtio
-    #    async: '300'
-    #    poll: '0'
-    #    with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="{{ hostname_prefix }}%02d"
-    #    when: disk_added == "True" and machine_state == "running"
-    #    register: new_disks
-        
-    #  - name: Check disk creation status
-    #    async_status: jid={{ item.ansible_job_id }}
-    #    register: job_result
-    #    until: job_result.finished
-    #    retries: 100
-    #    delay: 15
-    #    with_items: "{{ new_disks.results }}"
-    #    when: disk_added == "True" and machine_state == "running"
+
+
+      - name: Debug the this variable
+        debug:
+          msg: "{{ iface_address[0] }}"
+          verbosity: 1
+
+      - name: Debug created machine
+        debug:
+          var: new_vms
+          verbosity: 1
+
+      - name: make sure that the hostname is added to the dnsmasq hosts file
+        lineinfile:
+          line: "{{ iface_address[0] }} {{ hostname_prefix }}.ocp4.internal.croftvillas.com"
+          dest: /etc/hosts
+          state: present
+        remote_user: root
+        delegate_to: "{{ gateway }}"
+
+      - name: Restart DNS masq
+        systemd:
+          name: dnsmasq
+          state: restarted
+        remote_user: root
+        delegate_to: "{{ gateway }}"
+
+      - name: Start up machine hopefully it will get hostname from dhcp
+        ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          cluster: "Cluster01"
+          name: "{{ hostname_prefix }}.ocp4.internal.croftvillas.com"
+          state: next_run
+          wait: yes
+          kernel_path: ""
+          initrd_path: ""
+          kernel_params: ""
+          kernel_params_persist: yes
+          bios_type: "q35_ovmf"
+
+      - name: Add the new host into the inventory
+        add_host: hostname={{ hostname_prefix }}.ocp4.internal.croftvillas.com
+
 
       always:
       - name: Always revoke the SSO token
         ovirt_auth:
           state: absent
           ovirt_auth: "{{ ovirt_auth }}"
+
+- name: Playbook to install guest agent on new machine
+  hosts: "{{ hostname_prefix }}.ocp4.internal.croftvillas.com"
+  become: yes
+  remote_user: core
+
+  vars:
+    guest_agent: "http://rpmfind.net/linux/centos/7.6.1810/os/x86_64/Packages/qemu-guest-agent-2.12.0-2.el7.x86_64.rpm"
+
+  tasks:
+
+      - name: Install the guest agent on the new node
+        command: "rpm-ostree install --idempotent {{ guest_agent }}"
+
+      - name: Reboot new host
+        reboot:
+
+
+
