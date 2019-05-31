@@ -4,6 +4,10 @@
   gather_facts: False
   vars:
     machine_state: suspended
+    rhev_hosts:
+     - rhev02
+     - rhev03
+     - rhev05
 
   tasks:
     - block:

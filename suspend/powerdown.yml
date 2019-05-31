@@ -1,0 +1,59 @@
+---
+- name: This is a playbook for suspending OCP 4.1 environment
+  hosts: localhost
+  gather_facts: False
+  vars:
+    rhev_hosts:
+     - rhev02
+     - rhev03
+     - rhev05
+
+  tasks:
+    - block:
+      - include_vars: ../ovirt_Password.yml
+      
+      - name: Obtain SSO token using username/password creds.
+        ovirt_auth:
+          url: https://rhvm.internal.croftvillas.com/ovirt-engine/api
+          username: admin@internal
+          ca_file: ../pki-resource.cer
+          password: "{{ ovirt_password }}"
+
+      - name: Collect facts about the RHEV hosts
+        ovirt_host_facts:
+          auth: "{{ ovirt_auth }}"
+
+      - name: 'Identify the last running host'
+        set_fact:
+          running_host: "{{ my_idx }}"
+        when: item == "up"
+        loop: "{{ ovirt_hosts | json_query('[*].status') }}"
+        loop_control:
+          index_var: my_idx
+
+      - name: Check the variable types
+        debug:
+          msg: "{{ item }}"
+        with_items:
+          - "{{ rhev_hosts[ ( running_host + 1 )% 3] }}"
+          - "{{ rhev_hosts[ ( running_host + 2 )% 3] }}"
+
+
+      - name: 'Shut down the other two hosts'
+        ovirt_host:
+          auth: "{{ ovirt_auth }}"
+          state: "stopped"
+          cluster: "Cluster01"
+          name: "{{ item }}"
+          timeout: 600
+          wait: True
+        with_items:
+          - "{{ rhev_hosts[ ( running_host + 1 )% 3] }}"
+          - "{{ rhev_hosts[ ( running_host + 2 )% 3] }}"
+
+      always:
+      - name: Always revoke the SSO token
+        ovirt_auth:
+          state: absent
+          ovirt_auth: "{{ ovirt_auth }}"
+
