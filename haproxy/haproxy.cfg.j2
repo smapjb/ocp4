@@ -1,0 +1,68 @@
+global
+  debug
+  log /dev/log  local0
+  log /dev/log  local1 notice
+  stats socket /var/lib/haproxy/stats
+  stats timeout 30s
+  user haproxy
+  group haproxy
+  daemon
+defaults
+  log global
+  mode  tcp
+  option  tcplog
+  option  dontlognull
+  timeout connect 5000
+  timeout client 50000
+  timeout server 50000
+
+listen stats
+    bind *:1936
+    mode http
+    stats enable
+    stats uri /
+
+frontend api
+    bind *:6443 
+    mode tcp
+    default_backend apibackend
+
+frontend master
+    bind *:22623
+    mode tcp
+    default_backend masterbackend
+
+frontend http
+    bind *:80
+    mode tcp
+    default_backend httpbackend
+
+frontend https
+    bind *:443
+    mode tcp
+    default_backend httpsbackend
+
+backend apibackend
+    balance roundrobin
+    mode tcp
+{% for backend in api_backend_servers %}
+    server {{ backend.name }} {{ backend.address }} check
+{% endfor %}
+backend masterbackend
+    balance roundrobin
+    mode tcp
+{% for backend in master_backend_servers %}
+    server {{ backend.name }} {{ backend.address }} check
+{% endfor %}
+backend httpbackend
+    balance roundrobin
+    mode tcp
+{% for backend in http_backend_servers %}
+    server {{ backend.name }} {{ backend.address }} check
+{% endfor %}
+backend httpsbackend
+    balance roundrobin
+    mode tcp
+{% for backend in https_backend_servers %}
+    server {{ backend.name }} {{ backend.address }} check
+{% endfor %}
