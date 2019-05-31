@@ -1,0 +1,55 @@
+---
+- name: This is a playbook for suspending OCP 4.1 environment
+  hosts: localhost
+  gather_facts: False
+  vars:
+    machine_state: suspended
+
+  tasks:
+    - block:
+      - include_vars: ../ovirt_Password.yml
+      
+      - name: Obtain SSO token using username/password creds.
+        ovirt_auth:
+          url: https://rhvm.internal.croftvillas.com/ovirt-engine/api
+          username: admin@internal
+          ca_file: ../pki-resource.cer
+          password: "{{ ovirt_password }}"
+
+      - name: Find machines with ocp4 in comments
+        ovirt_vm_facts:
+          auth: "{{ ovirt_auth }}"
+          pattern: comment=ocp4
+
+#      - name: Print out the bios type of the machine that i am trying to suspend
+#        debug:
+#          msg: "{{ item.bios.type }}"
+#        with_items:  "{{ ovirt_vms }}"
+
+      - name: This task clones a machine in RHEV
+        ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          cluster: "Cluster01"
+          name: "{{ item.name }}"
+          state: suspended
+          bios_type: "{{ item.bios.type }}"
+          timeout: '300'
+        async: '300'
+        poll: '0'
+        with_items:  "{{ ovirt_vms }}"
+        register: suspended
+
+      - name: Check provisioning status
+        async_status: jid={{ item.ansible_job_id }}
+        register: job_result
+        until: job_result.finished
+        retries: 100
+        delay: 15
+        with_items: "{{ suspended.results }}"
+
+      always:
+      - name: Always revoke the SSO token
+        ovirt_auth:
+          state: absent
+          ovirt_auth: "{{ ovirt_auth }}"
+
