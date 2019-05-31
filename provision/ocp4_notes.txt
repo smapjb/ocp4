@@ -7,7 +7,7 @@ http://gateway.internal.croftvillas.com/worker.ign
 
 iso://rhcos-410.8.20190509.3-installer-kernel
 
-iso:///rhcos-410.8.20190509.3-installer-initramfs.img
+iso://rhcos-410.8.20190509.3-installer-initramfs.img
 
 nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://gateway/rhcos-uefi.gz coreos.inst.ignition_url=http://gateway/bootstrap.ign
 
