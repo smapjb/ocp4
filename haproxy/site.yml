@@ -1,31 +1,8 @@
 - name: This playbook installs and configures haproxy
-  hosts: all
+  hosts: haproxy
   become: yes
-  vars:
-        api_backend_servers:
-        - name: master01
-          address: master01.ocp4.internal.croftvillas.com:6443
-        - name: master02
-          address: master02.ocp4.internal.croftvillas.com:6443
-        - name: master03
-          address: master03.ocp4.internal.croftvillas.com:6443 
-        master_backend_servers:
-        - name: master01
-          address: master01.ocp4.internal.croftvillas.com:22623
-        - name: master02
-          address: master02.ocp4.internal.croftvillas.com:22623
-        - name: master03
-          address: master03.ocp4.internal.croftvillas.com:22623
-        http_backend_servers:
-        - name: worker02
-          address: worker02.ocp4.internal.croftvillas.com:80
-        - name: worker04
-          address: worker04.ocp4.internal.croftvillas.com:80
-        https_backend_servers:
-        - name: worker02
-          address: worker02.ocp4.internal.croftvillas.com:443
-        - name: worker04
-          address: worker04.ocp4.internal.croftvillas.com:443
+  gather_facts: false
+
   tasks:
 
     - name: Ensure HAProxy is installed (RedHat).
@@ -33,38 +10,6 @@
     
     - name: Ensure Firewalld is installed (RedHat).
       yum: name=firewalld state=installed
-
-    - name: Create self signed SSL certificates 
-      command: openssl req -x509 -nodes -sha256 -days 99999 -newkey rsa:2048 -keyout /etc/ssl/haproxy.key -out /etc/ssl/haproxy.cert -subj "/C=GB/ST=Hampshire/L=Liss/O=Ansible/CN=www.croftvillas.com"
-      args:
-        creates: /etc/ssl/haproxy.cert
-    
-    - name: Configure file permissions on certificate file.
-      file:
-        group: 'haproxy'
-        mode: 0600
-        path: /etc/ssl/haproxy.cert
-        owner: 'haproxy'
-
-    - name: Configure file permissions on key file.
-      file:
-        group: 'haproxy'
-        mode: 0600
-        path: /etc/ssl/haproxy.key
-        owner: 'haproxy'
-
-    - name: Assemble keys into pem format required for haproxy
-      assemble: 
-        src:  /etc/ssl/ 
-        dest: /etc/ssl/haproxy.pem 
-        regexp: '^haproxy\.(cert|key)'
-
-    - name: Configure file permissions on pem file.
-      file:
-        group: 'haproxy'
-        mode: 0600
-        path: /etc/ssl/haproxy.pem
-        owner: 'haproxy'
 
     - name: Copy HAProxy configuration in place.
       template:
@@ -74,9 +19,9 @@
         validate: haproxy -f %s -c -q
       notify: restart haproxy
 
-    - name: Enable stats port selinux policy 
+    - name: Enable selinux policy for the ports
       seport:
-        ports: 1936
+        ports: 1936, 6443, 22623, 80, 443
         proto: tcp
         setype: http_port_t
         state: present
@@ -86,39 +31,16 @@
 
     - name: Open up the firewall for the stats service
       firewalld:
-        port: 1936/tcp
+        port: "{{ item }}/tcp"
         permanent: true
         immediate: yes
         state: enabled
-
-    - name: Open up the firewall for k8s api
-      firewalld:
-        port: 6443/tcp
-        permanent: true
-        immediate: yes
-        state: enabled
-    
-    - name: Open up the firewall machine_config
-      firewalld:
-        port: 22623/tcp
-        permanent: true
-        immediate: yes
-        state: enabled
-    
-    - name: Open up the firewall http
-      firewalld:
-        port: 80/tcp
-        permanent: true
-        immediate: yes
-        state: enabled
-    
-    - name: Open up the firewall https
-      firewalld:
-        port: 443/tcp
-        permanent: true
-        immediate: yes
-        state: enabled
-
+      with_items:
+        - 1936
+        - 6443
+        - 22623
+        - 80
+        - 443
 
     - name: Ensure HAProxy is started and enabled on boot.
       service: name=haproxy state=started enabled=yes
