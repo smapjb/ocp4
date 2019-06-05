@@ -1,0 +1,11 @@
+---
+# defaults file for provision
+guest_agent: "http://rpmfind.net/linux/centos/7.6.1810/os/x86_64/Packages/qemu-guest-agent-2.12.0-2.el7.x86_64.rpm"
+gateway: gateway.internal.croftvillas.com
+machine_state: present
+cluster_name: 'ocp4'
+cluster_version: '4.1.0'
+node_type: worker
+host_memory: 8
+sockets: 2
+disk_size: 8

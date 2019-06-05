@@ -1,0 +1,118 @@
+---
+# tasks file for provision
+- block:
+  - include_vars: ../ovirt_Password.yml
+
+  - name: Obtain SSO token using username/password creds.
+    ovirt_auth:
+      url: https://rhvm.internal.croftvillas.com/ovirt-engine/api
+      username: admin@internal
+      ca_file: ../pki-resource.cer
+      password: "{{ ovirt_password }}"
+
+  - name: Add an additional disk to the VM
+    ovirt_disk:
+      auth: "{{ ovirt_auth }}"
+      name: "{{ hostname_prefix }}_{{ cluster_name }}_disk"
+      size: "{{ disk_size }}GiB"
+      storage_domain: QNAP_SD
+      interface: virtio
+    register: new_disks
+
+
+  - name: This task clones a machine in RHEV
+    ovirt_vm:
+      auth: "{{ ovirt_auth }}"
+      cluster: "Cluster01"
+      name: "{{ hostname_prefix }}.{{ cluster_name }}.internal.croftvillas.com"
+      description: "{{ cluster_name }} {{node_type}}"
+      comment: "{{ cluster_name }}"
+      state: running
+      memory: "{{ host_memory }}GiB"
+      cpu_sockets: "{{ sockets }}"
+      kernel_path: "iso://rhcos-{{ cluster_version }}-x86_64-installer-kernel"
+      initrd_path: "iso://rhcos-{{ cluster_version }}-x86_64-installer-initramfs.img"
+      kernel_params: "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://{{ gateway }}/rhcos-{{ cluster_version }}-x86_64-metal-bios.raw.gz coreos.inst.ignition_url=http://{{ gateway }}/{{ cluster_name }}/{{ node_type }}.ign"
+      kernel_params_persist: yes
+      fetch_nested: true
+      nested_attributes:
+        - mac
+      graphical_console:
+        protocol: vnc
+      type: server
+      operating_system: "rhel_8x64"
+      disks:
+        - name: "{{ hostname_prefix }}_{{ cluster_name }}_disk"
+      nics:
+        - name: nic1
+          profile_name: "ovirtmgmt"
+    register: new_vms
+
+  - name: extract the mac address of the newly created machine
+    set_fact:
+      mac_address: "{{ new_vms.vm.nics[0].mac.address }}"
+
+  - name: Get leases from Gateway API
+    uri:
+      url: "https://{{ gateway }}:81/api/v1/dhcp/leases"
+      return_content: yes
+      headers:
+         x-api-key: "{{ apikey }}"
+    register: leases
+
+  - name: Debug the this variable
+    debug:
+      var: leases
+      verbosity: 1
+
+  - name: find the IP address given to the machine from DHCP
+    set_fact:
+      iface_address: "{{ leases.json.data | dict2items | json_query(query)}}"
+    vars:
+      query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ mac_address }}'].ipv4"
+
+
+
+  - name: Debug the this variable
+    debug:
+      msg: "{{ iface_address[0] }}"
+      verbosity: 1
+
+  - name: Debug created machine
+    debug:
+      var: new_vms
+      verbosity: 1
+
+  - name: make sure that the hostname is added to the dnsmasq hosts file
+    lineinfile:
+      line: "{{ iface_address[0] }} {{ hostname_prefix }}.{{ cluster_name }}.internal.croftvillas.com"
+      dest: /etc/hosts
+      state: present
+    remote_user: root
+    delegate_to: "{{ gateway }}"
+
+  - name: Restart DNS masq
+    systemd:
+      name: dnsmasq
+      state: restarted
+    remote_user: root
+    delegate_to: "{{ gateway }}"
+
+  - name: Start up machine hopefully it will get hostname from dhcp
+    ovirt_vm:
+      auth: "{{ ovirt_auth }}"
+      cluster: "Cluster01"
+      name: "{{ hostname_prefix }}.{{ cluster_name }}.internal.croftvillas.com"
+      state: next_run
+      wait: yes
+      kernel_path: ""
+      initrd_path: ""
+      kernel_params: ""
+      kernel_params_persist: yes
+
+  always:
+  - name: Always revoke the SSO token
+    ovirt_auth:
+      state: absent
+      ovirt_auth: "{{ ovirt_auth }}"
+

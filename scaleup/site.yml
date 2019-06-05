@@ -1,0 +1,7 @@
+---
+- name: This is a playbook for cloning a vm in RHEV
+  hosts: localhost
+  gather_facts: False
+
+  roles:
+    - provision
