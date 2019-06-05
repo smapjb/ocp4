@@ -1,13 +1,48 @@
-- name: This playbook installs and configures haproxy
-  hosts: haproxy
+---
+- name: This is a playbook for cloning a vm in RHEV
+  hosts: localhost
+  gather_facts: False
+
+  roles:
+    - role: provision
+      host_memory: 2
+      sockets: 1
+      node_type: load balancer
+      machine_type: rhel
+
+
+- name: Subscribe to RHN and install haproxy
+  hosts: "{{ hostname_prefix }}.{{ cluster_name }}.internal.croftvillas.com"
   become: yes
-  gather_facts: false
 
   tasks:
+    - include_vars: ../ovirt_Password.yml
+
+    - name: Subscribe this system to the RHN
+      redhat_subscription:
+        state: present
+        username: "pcornelius@redhat.com"
+        password: "{{ rhn_password }}"
+        pool_ids: 8a85f98460bfb0470160c2ff250f3e66
+
+    - name: Disable unnecesary repos
+      command: subscription-manager repos --disable='*'
+    - name: Add RHEL repos
+      command: subscription-manager repos --enable=rhel-7-server-rpms --enable=rhel-7-server-optional-rpms --enable=rhel-7-server-extras-rpms --enable=rhel-7-server-rh-common-rpms
+
+    - name: Install the ovirt-agent using yum
+      yum:
+        state: latest
+        name: rhevm-guest-agent-common
+      notify: Start ovirt-agent
+    - name: Make sure that the service is enabled
+      service:
+        name: ovirt-guest-agent
+        enabled: yes
 
     - name: Ensure HAProxy is installed (RedHat).
       yum: name=haproxy state=installed
-    
+
     - name: Ensure Firewalld is installed (RedHat).
       yum: name=firewalld state=installed
 
@@ -25,7 +60,7 @@
         proto: tcp
         setype: http_port_t
         state: present
-    
+
     - name: Ensure Firewalld is started and enabled on boot.
       service: name=firewalld state=started enabled=yes
 
@@ -46,6 +81,13 @@
       service: name=haproxy state=started enabled=yes
 
   handlers:
-     - name: restart haproxy
-       service: name=haproxy state=restarted
+    - name: Start ovirt-agent
+      service:
+        name: ovirt-guest-agent
+        state: started
+
+    - name: restart haproxy
+      service:
+        name: haproxy
+        state: restarted
 

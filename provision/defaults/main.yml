@@ -9,3 +9,7 @@ node_type: worker
 host_memory: 8
 sockets: 2
 disk_size: 8
+
+
+#host_memory: 2
+#sockets: 1
