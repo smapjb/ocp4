@@ -45,24 +45,24 @@ frontend https
 backend apibackend
     balance roundrobin
     mode tcp
-{% for backend in groups['masters'] %}
+{% for backend in groups['master'] %}
     server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ api_port }} check
 {% endfor %}
 backend masterbackend
     balance roundrobin
     mode tcp
-{% for backend in groups['masters'] %}
+{% for backend in groups['master'] %}
     server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ master_port }} check
 {% endfor %}
 backend httpbackend
     balance roundrobin
     mode tcp
-{% for backend in groups['workers'] %}
+{% for backend in groups['worker'] %}
     server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ http_port }} check
 {% endfor %}
 backend httpsbackend
     balance roundrobin
     mode tcp
-{% for backend in groups['workers'] %}
+{% for backend in groups['worker'] %}
     server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ https_port }} check
 {% endfor %}

@@ -1,5 +1,6 @@
 ---
 # defaults file for haproxy_configure
+gateway: gateway.internal.croftvillas.com
 api_port: 6443
 master_port: 22623
 http_port: 80

@@ -71,12 +71,26 @@
       hostname_prefix:
         - worker02
 
+    - role: provision
+      host_memory: 8
+      sockets: 2
+      disk_size: 8
+      node_type: worker
+      machine_type: rhcos
+      hostname_prefix:
+        - worker03
 
-- name: Subscribe to RHN and install haproxy
+
+- name: Configure haproxy
   hosts: "haproxy.{{ cluster_name }}.internal.croftvillas.com"
-  become: yes
+  remote_user: root
 
   roles:
     - haproxy_configure
+
+  tasks:
+    - name: Print out the ip address
+      debug:
+        msg: "{{ ansible_facts.eth0.ipv4.address }}"
 
 

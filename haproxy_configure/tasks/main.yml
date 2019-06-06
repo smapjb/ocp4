@@ -8,11 +8,14 @@
     username: "pcornelius@redhat.com"
     password: "{{ rhn_password }}"
     pool_ids: 8a85f98460bfb0470160c2ff250f3e66
+  register: subscribed
 
-- name: Disable unnecesary repos
-  command: subscription-manager repos --disable='*'
-- name: Add RHEL repos
-  command: subscription-manager repos --enable=rhel-7-server-rpms --enable=rhel-7-server-optional-rpms --enable=rhel-7-server-extras-rpms --enable=rhel-7-server-rh-common-rpms
+- block:
+  - name: Disable unnecesary repos
+    command: subscription-manager repos --disable='*'
+  - name: Add RHEL repos
+    command: subscription-manager repos --enable=rhel-7-server-rpms --enable=rhel-7-server-optional-rpms --enable=rhel-7-server-extras-rpms --enable=rhel-7-server-rh-common-rpms
+  when: subscribed.changed
 
 - name: Install the ovirt-agent using yum
   yum:
@@ -60,6 +63,25 @@
     - 22623
     - 80
     - 443
+
+- name: Capture the haproxy IP address
+  set_fact:
+    haproxy_ip: "{{ ansible_facts.eth0.ipv4.address }}"
+
+- name: Fix up the wildcard dns and etcd svc-host stuff
+  template:
+    src: templates/dnsmasq_overlay.yaml.j2
+    dest: /etc/dnsmasq.d/{{ cluster_name }}.conf
+    mode: 0644
+  remote_user: root
+  delegate_to: "{{ gateway }}"
+
+- name: Restart DNS masq
+  systemd:
+    name: dnsmasq
+    state: restarted
+  remote_user: root
+  delegate_to: "{{ gateway }}"
 
 - name: Ensure HAProxy is started and enabled on boot.
   service: name=haproxy state=started enabled=yes
