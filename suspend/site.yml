@@ -20,10 +20,10 @@
           ca_file: ../pki-resource.cer
           password: "{{ ovirt_password }}"
 
-      - name: Find machines with ocp4 in comments
+      - name: Find machines with {{ cluster_name }} in comments
         ovirt_vm_facts:
           auth: "{{ ovirt_auth }}"
-          pattern: comment=ocp4
+          pattern: comment={{ cluster_name }}
 
 #      - name: Print out the bios type of the machine that i am trying to suspend
 #        debug:
