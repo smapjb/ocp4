@@ -7,7 +7,7 @@
     - role: provision
       host_memory: 2
       sockets: 1
-      node_type: load balancer
+      node_type: haproxy
       machine_type: rhel
       hostname_prefix:
         - haproxy
@@ -52,6 +52,24 @@
       hostname_prefix:
         - master02
         - etcd-2
+
+    - role: provision
+      host_memory: 8
+      sockets: 2
+      disk_size: 8
+      node_type: worker
+      machine_type: rhcos
+      hostname_prefix:
+        - worker01
+
+    - role: provision
+      host_memory: 8
+      sockets: 2
+      disk_size: 8
+      node_type: worker
+      machine_type: rhcos
+      hostname_prefix:
+        - worker02
 
 
 - name: Subscribe to RHN and install haproxy

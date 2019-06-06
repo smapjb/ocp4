@@ -46,23 +46,23 @@ backend apibackend
     balance roundrobin
     mode tcp
 {% for backend in groups['masters'] %}
-    server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ hostvars[groups['masters'][0]].api_port }} check
+    server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ api_port }} check
 {% endfor %}
 backend masterbackend
     balance roundrobin
     mode tcp
 {% for backend in groups['masters'] %}
-    server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ hostvars[groups['masters'][0]].master_port }} check
+    server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ master_port }} check
 {% endfor %}
 backend httpbackend
     balance roundrobin
     mode tcp
 {% for backend in groups['workers'] %}
-    server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ hostvars[groups['workers'][0]].http_port }} check
+    server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ http_port }} check
 {% endfor %}
 backend httpsbackend
     balance roundrobin
     mode tcp
 {% for backend in groups['workers'] %}
-    server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ hostvars[groups['workers'][0]].https_port }} check
+    server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ https_port }} check
 {% endfor %}

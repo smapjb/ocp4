@@ -5,7 +5,7 @@ bootstrap.ocp4.internal.croftvillas.com
 haproxy.ocp4.internal.croftvillas.com ansible_ssh_user=root
 
 [masters]
-master[01:03].ocp4.internal.croftvillas.com
+master[00:02].ocp4.internal.croftvillas.com
 
 [workers]
 worker[01:02].ocp4.internal.croftvillas.com
