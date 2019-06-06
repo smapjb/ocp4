@@ -164,6 +164,11 @@
     add_host:
       name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
       groups: "{{ node_type }}"
+  - name: Make sure the bootstrap is added as a master node
+    add_host:
+      name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
+      groups: "master"
+    when: hostname_prefix[0] == 'bootstrap'
 
   always:
   - name: Always revoke the SSO token

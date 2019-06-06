@@ -4,6 +4,8 @@
   gather_facts: False
 
   roles:
+    - pre_install
+
     - role: provision
       host_memory: 2
       sockets: 1
@@ -88,9 +90,29 @@
   roles:
     - haproxy_configure
 
+- name: Run the installer against the bootstrap
+  hosts: localhost
+  gather_facts: False
+
   tasks:
-    - name: Print out the ip address
-      debug:
-        msg: "{{ ansible_facts.eth0.ipv4.address }}"
+    - name: Peform the installation
+      command: "./openshift-install --dir={{ cluster_name }} wait-for bootstrap-complete --log-level debug"
+
+
+
+- name: This playbook installs the guest agent on rhcos nodes
+  hosts: worker:master:!bootstrap
+  remote_user: core
+  become: true
+
+  vars:
+    guest_agent: "http://rpmfind.net/linux/centos/7.6.1810/os/x86_64/Packages/qemu-guest-agent-2.12.0-2.el7.x86_64.rpm"
+
+  tasks:
+    - name: Install the guest agent on the new node
+      command: "rpm-ostree install --idempotent {{ guest_agent }}"
+
+    - name: Reboot new host
+      reboot:
 
 

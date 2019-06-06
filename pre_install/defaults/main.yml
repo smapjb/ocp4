@@ -1,0 +1,12 @@
+---
+# defaults file for provision
+cluster_name: 'ocp4'
+cluster_version: '4.1.0'
+gateway: gateway.internal.croftvillas.com
+rhev_manager: rhvm.internal.croftvillas.com
+openshift_deps_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.1/latest
+openshift_clients_url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest
+
+
+#host_memory: 2
+#sockets: 1
