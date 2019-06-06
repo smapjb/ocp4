@@ -1,0 +1,65 @@
+---
+# tasks file for haproxy_configure
+- include_vars: ../ovirt_Password.yml
+
+- name: Subscribe this system to the RHN
+  redhat_subscription:
+    state: present
+    username: "pcornelius@redhat.com"
+    password: "{{ rhn_password }}"
+    pool_ids: 8a85f98460bfb0470160c2ff250f3e66
+
+- name: Disable unnecesary repos
+  command: subscription-manager repos --disable='*'
+- name: Add RHEL repos
+  command: subscription-manager repos --enable=rhel-7-server-rpms --enable=rhel-7-server-optional-rpms --enable=rhel-7-server-extras-rpms --enable=rhel-7-server-rh-common-rpms
+
+- name: Install the ovirt-agent using yum
+  yum:
+    state: latest
+    name: rhevm-guest-agent-common
+  notify: Start ovirt-agent
+- name: Make sure that the service is enabled
+  service:
+    name: ovirt-guest-agent
+    enabled: yes
+
+- name: Ensure HAProxy is installed (RedHat).
+  yum: name=haproxy state=installed
+
+- name: Ensure Firewalld is installed (RedHat).
+  yum: name=firewalld state=installed
+
+- name: Copy HAProxy configuration in place.
+  template:
+    src: templates/haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    mode: 0644
+    validate: haproxy -f %s -c -q
+  notify: restart haproxy
+
+- name: Enable selinux policy for the ports
+  seport:
+    ports: 1936, 6443, 22623, 80, 443
+    proto: tcp
+    setype: http_port_t
+    state: present
+
+- name: Ensure Firewalld is started and enabled on boot.
+  service: name=firewalld state=started enabled=yes
+
+- name: Open up the firewall for the stats service
+  firewalld:
+    port: "{{ item }}/tcp"
+    permanent: true
+    immediate: yes
+    state: enabled
+  with_items:
+    - 1936
+    - 6443
+    - 22623
+    - 80
+    - 443
+
+- name: Ensure HAProxy is started and enabled on boot.
+  service: name=haproxy state=started enabled=yes

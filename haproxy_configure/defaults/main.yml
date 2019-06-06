@@ -1,0 +1,6 @@
+---
+# defaults file for haproxy_configure
+api_port: 6443
+master_port: 22623
+http_port: 80
+https_port: 443

@@ -1,0 +1,11 @@
+---
+# handlers file for haproxy_configure
+- name: Start ovirt-agent
+  service:
+    name: ovirt-guest-agent
+    state: started
+
+- name: restart haproxy
+  service:
+    name: haproxy
+    state: restarted
