@@ -9,22 +9,23 @@
       username: admin@internal
       ca_file: ../pki-resource.cer
       password: "{{ ovirt_password }}"
+
   - block:
     - name: Add an additional disk to the VM
       ovirt_disk:
         auth: "{{ ovirt_auth }}"
-        name: "{{ hostname_prefix }}_{{ cluster_name }}_disk"
+        name: "{{ hostname_prefix[0] }}_{{ cluster_name }}_disk"
         size: "{{ disk_size }}GiB"
         storage_domain: QNAP_SD
         interface: virtio
       register: new_disks
 
 
-    - name: This task clones a machine in RHEV
+    - name: This task creates a machine in RHEV
       ovirt_vm:
         auth: "{{ ovirt_auth }}"
         cluster: "Cluster01"
-        name: "{{ hostname_prefix }}.{{ cluster_name }}.internal.croftvillas.com"
+        name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
         description: "{{ cluster_name }} {{node_type}}"
         comment: "{{ cluster_name }}"
         state: running
@@ -42,42 +43,44 @@
         type: server
         operating_system: "rhel_8x64"
         disks:
-          - name: "{{ hostname_prefix }}_{{ cluster_name }}_disk"
+          - name: "{{ hostname_prefix[0] }}_{{ cluster_name }}_disk"
         nics:
           - name: nic1
             profile_name: "ovirtmgmt"
       register: new_vms
+    - name: extract the mac address of the newly created machine
+      set_fact:
+        mac_address: "{{ new_vms.vm.nics[0].mac.address }}"
     when: machine_type == "rhcos"
 
   - block:
-    - name: This task clones a machine in RHEV
+    - name: This task clones a machine from a template in RHEV
       ovirt_vm:
         auth: "{{ ovirt_auth }}"
-        state: "{{ machine_state }}"
+        state: running
         cluster: "Cluster01"
-        name: "{{ hostname_prefix }}.{{ cluster_name }}.internal.croftvillas.com"
+        name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
         description: "{{ cluster_name }} {{node_type}}"
         comment: "{{ cluster_name }}"
         template: rhel7_template
         fetch_nested: true
         nested_attributes:
           - mac
-
         wait: True
         memory: "{{ host_memory }}GiB"
         cpu_sockets: "{{ sockets }}"
         graphical_console:
           protocol: vnc
         cloud_init:
-          host_name: "{{ hostname_prefix }}.{{ cluster_name }}.internal.croftvillas.com"
+          host_name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
           authorized_ssh_keys: "{{ ssh_key }}"
       register: new_vms
+    - name: extract the mac address of the newly created machine
+      set_fact:
+        mac_address: "{{ new_vms.vm.nics[0].mac.address }}"
     when: machine_type == "rhel"
 
 
-  - name: extract the mac address of the newly created machine
-    set_fact:
-      mac_address: "{{ new_vms.vm.nics[0].mac.address }}"
 
   - name: Get leases from Gateway API
     uri:
@@ -98,8 +101,6 @@
     vars:
       query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ mac_address }}'].ipv4"
 
-
-
   - name: Debug the this variable
     debug:
       msg: "{{ iface_address[0] }}"
@@ -110,13 +111,23 @@
       var: new_vms
       verbosity: 1
 
-  - name: make sure that the hostname is added to the dnsmasq hosts file
+  - name: Build up the hosts line
+    set_fact:
+      the_line: "{{ the_line|default([]) + [ item + '.' + cluster_name + '.internal.croftvillas.com' ] }}"
+    with_items:
+      - "{{ hostname_prefix }}"
+
+  - name: Make sure that the hostname is added to the dnsmasq hosts file
     lineinfile:
-      line: "{{ iface_address[0] }} {{ hostname_prefix }}.{{ cluster_name }}.internal.croftvillas.com"
+      line: "{{ iface_address[0] }} {{ the_line | join(' ') }}"
       dest: /etc/hosts
       state: present
     remote_user: root
     delegate_to: "{{ gateway }}"
+
+  - name: Reset the hsts variable
+    set_fact:
+      the_line: []
 
   - name: Restart DNS masq
     systemd:
@@ -129,13 +140,15 @@
     ovirt_vm:
       auth: "{{ ovirt_auth }}"
       cluster: "Cluster01"
-      name: "{{ hostname_prefix }}.{{ cluster_name }}.internal.croftvillas.com"
+      name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
       state: next_run
+      type: server
       wait: yes
       kernel_path: ""
       initrd_path: ""
       kernel_params: ""
       kernel_params_persist: yes
+    when: machine_type == "rhcos"
 
   always:
   - name: Always revoke the SSO token
