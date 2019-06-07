@@ -84,6 +84,23 @@
       hostname_prefix:
         - worker03
 
+    - role: provision
+      host_memory: 8
+      sockets: 2
+      disk_size: 8
+      node_type: worker
+      machine_type: rhcos
+      hostname_prefix:
+        - worker04
+
+    - role: provision
+      host_memory: 8
+      sockets: 2
+      disk_size: 8
+      node_type: worker
+      machine_type: rhcos
+      hostname_prefix:
+        - worker05
   # Now that all the machines have been provisioned we can configure haproxy (validation of the config will fail if machines are not set up correctly)
 - name: Configure haproxy
   hosts: "haproxy.{{ cluster_name }}.internal.croftvillas.com"
@@ -145,7 +162,7 @@
       environment:
         KUBECONFIG: ./{{ cluster_name }}/auth/kubeconfig
       retries: 10
-      delay: 6
+      delay: 30
       register: result
       until: result.rc == 0
 

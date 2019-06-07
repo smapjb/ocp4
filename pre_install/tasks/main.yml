@@ -19,7 +19,7 @@
       dest: "./"
       remote_src: yes
 
-  - name: fix up the install config
+  - name: Fix up the install config
     template:
       src: templates/install-config.yaml.j2
       dest: "./{{ cluster_name }}/install-config.yaml"
@@ -61,7 +61,7 @@
     delegate_to: "{{ gateway }}"
 
   # here we need to use the engine uploader on rhvm because no API upload for ISO domain
-  - name: Add the kernel and ram disk images to the RHEV iso domain
+  - name: Download the kernel and ram disk images to the RHV manager
     get_url:
       url: "{{ openshift_deps_url }}/{{ item }}"
       dest: "/tmp"
@@ -71,8 +71,8 @@
       - "rhcos-{{ cluster_version }}-x86_64-installer-initramfs.img"
       - "rhcos-{{ cluster_version }}-x86_64-installer-kernel"
 
-  # Note that I had to add passord to isouploader.conf, also ISO domain name is hard wired
-  - name: Case insensitive password string match
+  # TODO Note that I had to add passord to isouploader.conf, also ISO domain name is hard wired
+  - name: Upload the kernel and ram disk images to the RHV iso domain via the RHV manager
     command: "engine-iso-uploader --iso-domain=QNAP_ISO upload /tmp/{{ item }} --force"
     remote_user: root
     delegate_to: "{{ rhev_manager }}"

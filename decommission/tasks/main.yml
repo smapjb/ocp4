@@ -20,7 +20,7 @@
 
   # Conditional Block only runs when machine does not exist
   - block:
-    - name: This task removes the machine
+    - name: Decommission the machine from RHV
       ovirt_vm:
         auth: "{{ ovirt_auth }}"
         cluster: "Cluster01"
@@ -30,7 +30,7 @@
       set_fact:
         mac_address: "{{ ovirt_vms[0].nics[0].mac.address }}"
 
-    - name: Get leases from Gateway API
+    - name: Get the DHCP leases from the ClearOS Gateway
       uri:
         url: "https://{{ gateway }}:81/api/v1/dhcp/leases"
         return_content: yes
@@ -38,19 +38,19 @@
            x-api-key: "{{ apikey }}"
       register: leases
 
-    - name: find the IP address given to the machine from DHCP
+    - name: Find the IP address given to the machine from DHCP
       set_fact:
         iface_address: "{{ leases.json.data | dict2items | json_query(query)}}"
       vars:
         query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ mac_address }}'].ipv4"
 
-    - name: Build up the hosts line
+    - name: Construct the /etc/hosts file line for the decommissioned server
       set_fact:
         the_line: "{{ the_line|default([]) + [ item + '.' + cluster_name + '.internal.croftvillas.com' ] }}"
       with_items:
         - "{{ hostname_prefix }}"
 
-    - name: Make sure that the hostname is added to the dnsmasq hosts file
+    - name: Remove the host line from /etc/hosts file on the ClearOS Gateway server
       lineinfile:
         line: "{{ iface_address[0] }} {{ the_line | join(' ') }}"
         dest: /etc/hosts
@@ -58,11 +58,11 @@
       remote_user: root
       delegate_to: "{{ gateway }}"
 
-    - name: Reset the hosts variable
+    - name: Reset the hosts variable ready for the next run
       set_fact:
         the_line: []
 
-    - name: Restart DNS masq
+    - name: Restart DNS masq on the ClearOS Gateway to make sure the changes are in DNS
       systemd:
         name: dnsmasq
         state: restarted

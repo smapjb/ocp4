@@ -15,10 +15,10 @@
       auth: "{{ ovirt_auth }}"
       pattern: name="{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
 
-  # Conditional Block only runs when machine does not exist
+  # Conditional Block only runs when machine does not exist TODO except for bootstrap which gets recreated each time
   - block:
     - block:
-      - name: Add an additional disk to the VM
+      - name: Create a disk for the new VM
         ovirt_disk:
           auth: "{{ ovirt_auth }}"
           name: "{{ hostname_prefix[0] }}_{{ cluster_name }}_disk"
@@ -28,7 +28,7 @@
         register: new_disks
 
 
-      - name: This task creates a machine in RHEV
+      - name: Create a RHCOS machine to boot off of the pre-install ignition
         ovirt_vm:
           auth: "{{ ovirt_auth }}"
           cluster: "Cluster01"
@@ -61,7 +61,7 @@
       when: machine_type == "rhcos"
 
     - block:
-      - name: This task clones a machine from a template in RHEV
+      - name: Clones a machine from a rhel7 template
         ovirt_vm:
           auth: "{{ ovirt_auth }}"
           state: running
@@ -82,14 +82,14 @@
             host_name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
             authorized_ssh_keys: "{{ ssh_key }}"
         register: new_vms
-      - name: extract the mac address of the newly created machine
+      - name: Extract the mac address of the newly created machine
         set_fact:
           mac_address: "{{ new_vms.vm.nics[0].mac.address }}"
       when: machine_type == "rhel"
 
 
 
-    - name: Get leases from Gateway API
+    - name: Get DHCP leases from the ClearOS Gateway API
       uri:
         url: "https://{{ gateway }}:81/api/v1/dhcp/leases"
         return_content: yes
@@ -97,34 +97,34 @@
            x-api-key: "{{ apikey }}"
       register: leases
 
-    - name: Debug the this variable
+    - name: Print out the leases
       debug:
         var: leases
         verbosity: 1
 
-    - name: find the IP address given to the machine from DHCP
+    - name: Find the IP address given to the machine by ClearOS Gateway DHCP
       set_fact:
         iface_address: "{{ leases.json.data | dict2items | json_query(query)}}"
       vars:
         query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ mac_address }}'].ipv4"
 
-    - name: Debug the this variable
+    - name: Print out the discovered IP address
       debug:
         msg: "{{ iface_address[0] }}"
         verbosity: 1
 
-    - name: Debug created machine
+    - name: Print out information about the newly created machine
       debug:
         var: new_vms
         verbosity: 1
 
-    - name: Build up the hosts line
+    - name: Loop over the hostname_prefix list and construct a line for the /etc/hosts file
       set_fact:
         the_line: "{{ the_line|default([]) + [ item + '.' + cluster_name + '.internal.croftvillas.com' ] }}"
       with_items:
         - "{{ hostname_prefix }}"
 
-    - name: Make sure that the hostname is added to the dnsmasq hosts file
+    - name: Add the hosts file line to the ClearOS Gateway
       lineinfile:
         line: "{{ iface_address[0] }} {{ the_line | join(' ') }}"
         dest: /etc/hosts
@@ -132,18 +132,18 @@
       remote_user: root
       delegate_to: "{{ gateway }}"
 
-    - name: Reset the hosts variable
+    - name: Re-initialise the hosts variable ready for the next run
       set_fact:
         the_line: []
 
-    - name: Restart DNS masq
+    - name: Restart dnsmasq on ClearOS Gateway to make sure the added host is picked up in DNS
       systemd:
         name: dnsmasq
         state: restarted
       remote_user: root
       delegate_to: "{{ gateway }}"
 
-    - name: Start up machine hopefully it will get hostname from dhcp
+    - name: Remove the kernel boot parameters from the newly created machine
       ovirt_vm:
         auth: "{{ ovirt_auth }}"
         cluster: "Cluster01"
@@ -160,11 +160,11 @@
     when: not ovirt_vms | length | bool
 
   # at this stage the host should be created so make sure it is in the inventory
-  - name: Build up the inventory for other config
+  - name: Add the new hosts into the in memory inventory for use in haproxy configuration
     add_host:
       name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
       groups: "{{ node_type }}"
-  - name: Make sure the bootstrap is added as a master node
+  - name: Add the bootstrap server to the master group
     add_host:
       name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
       groups: "master"

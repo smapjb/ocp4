@@ -11,29 +11,29 @@
   register: subscribed
 
 - block:
-  - name: Disable unnecesary repos
+  - name: Disable all repositories
     command: subscription-manager repos --disable='*'
-  - name: Add RHEL repos
+  - name: Enable RHEL server repositories
     command: subscription-manager repos --enable=rhel-7-server-rpms --enable=rhel-7-server-optional-rpms --enable=rhel-7-server-extras-rpms --enable=rhel-7-server-rh-common-rpms
   when: subscribed.changed
 
-- name: Install the ovirt-agent using yum
+- name: Install the ovirt-agent
   yum:
     state: latest
     name: rhevm-guest-agent-common
   notify: Start ovirt-agent
-- name: Make sure that the service is enabled
+- name: Make sure that the ovirt-guest-agent service is enabled on reboot
   service:
     name: ovirt-guest-agent
     enabled: yes
 
-- name: Ensure HAProxy is installed (RedHat).
+- name: Ensure HAProxy is installed.
   yum: name=haproxy state=installed
 
-- name: Ensure Firewalld is installed (RedHat).
+- name: Ensure Firewalld is installed.
   yum: name=firewalld state=installed
 
-- name: Copy HAProxy configuration in place.
+- name: Configuration HAProxy from in memory inventory.
   template:
     src: templates/haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
@@ -41,7 +41,7 @@
     validate: haproxy -f %s -c -q
   notify: restart haproxy
 
-- name: Enable selinux policy for the ports
+- name: Enable selinux policy for the new ports
   seport:
     ports: 1936, 6443, 22623, 80, 443
     proto: tcp
@@ -51,7 +51,7 @@
 - name: Ensure Firewalld is started and enabled on boot.
   service: name=firewalld state=started enabled=yes
 
-- name: Open up the firewall for the stats service
+- name: Open up the firewall for the new service ports
   firewalld:
     port: "{{ item }}/tcp"
     permanent: true
@@ -64,11 +64,11 @@
     - 80
     - 443
 
-- name: Capture the haproxy IP address
+- name: Get the IP address for HAProxy
   set_fact:
     haproxy_ip: "{{ ansible_facts.eth0.ipv4.address }}"
 
-- name: Fix up the wildcard dns and etcd svc-host stuff
+- name: Construct the wildcard DNS and etcd svc-host priorities for the OCP cluster
   template:
     src: templates/dnsmasq_overlay.yaml.j2
     dest: /etc/dnsmasq.d/{{ cluster_name }}.conf
@@ -76,7 +76,7 @@
   remote_user: root
   delegate_to: "{{ gateway }}"
 
-- name: Restart DNS masq
+- name: Restart DNS masq on ClearOS Gateway server to make sure DNS changes are in effect.
   systemd:
     name: dnsmasq
     state: restarted
