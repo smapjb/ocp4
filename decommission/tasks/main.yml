@@ -1,0 +1,79 @@
+---
+# tasks file for decommission
+- block:
+  - include_vars: ../ovirt_Password.yml
+
+  - name: Obtain SSO token using username/password creds.
+    ovirt_auth:
+      url: https://rhvm.internal.croftvillas.com/ovirt-engine/api
+      username: admin@internal
+      ca_file: ../pki-resource.cer
+      password: "{{ ovirt_password }}"
+
+  - name: Check if the machine already exists
+    ovirt_vm_facts:
+      auth: "{{ ovirt_auth }}"
+      fetch_nested: true
+      nested_attributes:
+        - mac
+      pattern: name="{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
+
+  # Conditional Block only runs when machine does not exist
+  - block:
+    - name: This task removes the machine
+      ovirt_vm:
+        auth: "{{ ovirt_auth }}"
+        cluster: "Cluster01"
+        name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
+        state: absent
+    - name: extract the mac address of the newly created machine
+      set_fact:
+        mac_address: "{{ ovirt_vms[0].nics[0].mac.address }}"
+
+    - name: Get leases from Gateway API
+      uri:
+        url: "https://{{ gateway }}:81/api/v1/dhcp/leases"
+        return_content: yes
+        headers:
+           x-api-key: "{{ apikey }}"
+      register: leases
+
+    - name: find the IP address given to the machine from DHCP
+      set_fact:
+        iface_address: "{{ leases.json.data | dict2items | json_query(query)}}"
+      vars:
+        query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ mac_address }}'].ipv4"
+
+    - name: Build up the hosts line
+      set_fact:
+        the_line: "{{ the_line|default([]) + [ item + '.' + cluster_name + '.internal.croftvillas.com' ] }}"
+      with_items:
+        - "{{ hostname_prefix }}"
+
+    - name: Make sure that the hostname is added to the dnsmasq hosts file
+      lineinfile:
+        line: "{{ iface_address[0] }} {{ the_line | join(' ') }}"
+        dest: /etc/hosts
+        state: absent
+      remote_user: root
+      delegate_to: "{{ gateway }}"
+
+    - name: Reset the hosts variable
+      set_fact:
+        the_line: []
+
+    - name: Restart DNS masq
+      systemd:
+        name: dnsmasq
+        state: restarted
+      remote_user: root
+      delegate_to: "{{ gateway }}"
+
+    when: ovirt_vms | length | bool
+
+  always:
+  - name: Always revoke the SSO token
+    ovirt_auth:
+      state: absent
+      ovirt_auth: "{{ ovirt_auth }}"
+

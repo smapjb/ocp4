@@ -1,0 +1,4 @@
+---
+# defaults file for decommission
+gateway: gateway.internal.croftvillas.com  # gateway is where dnsmasq is installed
+cluster_name: 'ocp4'
