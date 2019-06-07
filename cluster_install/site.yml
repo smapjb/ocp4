@@ -117,6 +117,7 @@
     - name: Reboot new host
       reboot:
 
+  # Also on the decommissioning TODO bootstrap gets reprovisioned on second playbook run
 - name: Decommission the bootstrap server and remove it from DNS
   hosts: localhost
   gather_facts: False
@@ -136,19 +137,21 @@
       remote_user: root
       notify: Reload haproxy
 
+      # There is a timing issue here - keep retrying for a minute
     - name: Patch the image registry
       command: "./oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{{ patch }}'"
       vars:
         patch: '{"spec":{"storage":{"emptyDir":{}}}}'
       environment:
         KUBECONFIG: ./{{ cluster_name }}/auth/kubeconfig
+      retries: 10
+      delay: 6
+      register: result
+      until: result.rc == 0
 
     - name: Wait for installation to finish
       command: "./openshift-install --dir={{ cluster_name }} wait-for install-complete --log-level debug"
       register: install_output
-    - name: Install complete
-      debug:
-        msg: "{{ install_output.stdout_lines | last }}"
 
   handlers:
     - name: Reload haproxy
