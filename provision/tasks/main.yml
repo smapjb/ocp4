@@ -148,7 +148,7 @@
         auth: "{{ ovirt_auth }}"
         cluster: "Cluster01"
         name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
-        state: next_run
+        state: running
         type: server
         wait: yes
         timeout: 300

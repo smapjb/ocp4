@@ -1,11 +1,13 @@
 ---
-- name: This is a playbook for cloning a vm in RHEV
+- name: Provision the machines needed to bootstrap an openshift 4.1 cluster
   hosts: localhost
   gather_facts: False
 
   roles:
+    # Download the installation program and set up the boot resources and ignition config
     - pre_install
 
+    # Provision the machines TODO wrap these into loops
     - role: provision
       host_memory: 2
       sockets: 1
@@ -82,24 +84,24 @@
       hostname_prefix:
         - worker03
 
-
+  # Now that all the machines have been provisioned we can configure haproxy (validation of the config will fail if machines are not set up correctly)
 - name: Configure haproxy
   hosts: "haproxy.{{ cluster_name }}.internal.croftvillas.com"
   remote_user: root
 
   roles:
+      # Role to install haproxy and configure it for the openshift cluster - requires in memory inventory from provisioning play above
     - haproxy_configure
 
-- name: Run the installer against the bootstrap
+- name: Wait for the bootstrap process to complete
   hosts: localhost
   gather_facts: False
 
   tasks:
-    - name: Peform the installation
+    - name: Poll logs until bootstrap process is complete
       command: "./openshift-install --dir={{ cluster_name }} wait-for bootstrap-complete --log-level debug"
 
-
-
+  # Once bootstrap is complete we can use rpm-ostree to install the RHEV guest agent and reboot the machines
 - name: This playbook installs the guest agent on rhcos nodes
   hosts: worker:master:!bootstrap
   remote_user: core
@@ -111,8 +113,47 @@
   tasks:
     - name: Install the guest agent on the new node
       command: "rpm-ostree install --idempotent {{ guest_agent }}"
-
+      # Not sure whether we need to reboot the machines or not here
     - name: Reboot new host
       reboot:
 
+- name: Decommission the bootstrap server and remove it from DNS
+  hosts: localhost
+  gather_facts: False
 
+  roles:
+    - role: decommission
+      hostname_prefix:
+        - bootstrap
+
+  tasks:
+    - name: Remove bootstrap server from haproxy config.
+      lineinfile:
+        regexp: "bootstrap"
+        dest: /etc/haproxy/haproxy.cfg
+        state: absent
+      delegate_to: haproxy.{{ cluster_name }}.internal.croftvillas.com
+      remote_user: root
+      notify: Reload haproxy
+
+    - name: Patch the image registry
+      command: "./oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{{ patch }}'"
+      vars:
+        patch: '{"spec":{"storage":{"emptyDir":{}}}}'
+      environment:
+        KUBECONFIG: ./{{ cluster_name }}/auth/kubeconfig
+
+    - name: Wait for installation to finish
+      command: "./openshift-install --dir={{ cluster_name }} wait-for install-complete --log-level debug"
+      register: install_output
+    - name: Install complete
+      debug:
+        msg: "{{ install_output.stdout_lines | last }}"
+
+  handlers:
+    - name: Reload haproxy
+      systemd:
+        name: haproxy
+        state: reloaded
+      delegate_to: haproxy.{{ cluster_name }}.internal.croftvillas.com
+      remote_user: root
