@@ -33,12 +33,13 @@
 - name: Ensure Firewalld is installed.
   yum: name=firewalld state=installed
 
+  # Switched off validation to speed up install time, cluster can bootstrap before we provision servers
 - name: Configuration HAProxy from in memory inventory.
   template:
     src: templates/haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
     mode: 0644
-    validate: haproxy -f %s -c -q
+#    validate: haproxy -f %s -c -q
   notify: restart haproxy
 
 - name: Enable selinux policy for the new ports
