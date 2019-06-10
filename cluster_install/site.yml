@@ -71,7 +71,7 @@
   gather_facts: False
 
   roles:
-      - role: provision
+    - role: provision
       host_memory: 8
       sockets: 2
       disk_size: 20
