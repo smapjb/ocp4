@@ -30,7 +30,7 @@
     - role: provision
       host_memory: 16
       sockets: 4
-      disk_size: 8
+      disk_size: 40
       node_type: master
       machine_type: rhcos
       hostname_prefix:
@@ -40,7 +40,7 @@
     - role: provision
       host_memory: 16
       sockets: 4
-      disk_size: 8
+      disk_size: 40
       node_type: master
       machine_type: rhcos
       hostname_prefix:
@@ -50,57 +50,13 @@
     - role: provision
       host_memory: 16
       sockets: 4
-      disk_size: 8
+      disk_size: 40
       node_type: master
       machine_type: rhcos
       hostname_prefix:
         - master02
         - etcd-2
 
-    - role: provision
-      host_memory: 8
-      sockets: 2
-      disk_size: 8
-      node_type: worker
-      machine_type: rhcos
-      hostname_prefix:
-        - worker01
-
-    - role: provision
-      host_memory: 8
-      sockets: 2
-      disk_size: 8
-      node_type: worker
-      machine_type: rhcos
-      hostname_prefix:
-        - worker02
-
-    - role: provision
-      host_memory: 8
-      sockets: 2
-      disk_size: 8
-      node_type: worker
-      machine_type: rhcos
-      hostname_prefix:
-        - worker03
-
-    - role: provision
-      host_memory: 8
-      sockets: 2
-      disk_size: 8
-      node_type: worker
-      machine_type: rhcos
-      hostname_prefix:
-        - worker04
-
-    - role: provision
-      host_memory: 8
-      sockets: 2
-      disk_size: 8
-      node_type: worker
-      machine_type: rhcos
-      hostname_prefix:
-        - worker05
   # Now that all the machines have been provisioned we can configure haproxy (validation of the config will fail if machines are not set up correctly)
 - name: Configure haproxy
   hosts: "haproxy.{{ cluster_name }}.internal.croftvillas.com"
@@ -110,9 +66,37 @@
       # Role to install haproxy and configure it for the openshift cluster - requires in memory inventory from provisioning play above
     - haproxy_configure
 
-- name: Wait for the bootstrap process to complete
+- name: Provision workers while waiting for the bootstrap process to complete
   hosts: localhost
   gather_facts: False
+
+  roles:
+      - role: provision
+      host_memory: 8
+      sockets: 2
+      disk_size: 20
+      node_type: worker
+      machine_type: rhcos
+      hostname_prefix:
+        - worker01
+
+    - role: provision
+      host_memory: 8
+      sockets: 2
+      disk_size: 20
+      node_type: worker
+      machine_type: rhcos
+      hostname_prefix:
+        - worker02
+
+    - role: provision
+      host_memory: 8
+      sockets: 2
+      disk_size: 20
+      node_type: worker
+      machine_type: rhcos
+      hostname_prefix:
+        - worker03
 
   tasks:
     - name: Poll logs until bootstrap process is complete
