@@ -5,5 +5,3 @@ api_port: 6443
 master_port: 22623
 http_port: 80
 https_port: 443
-# By default this role only reconfigures haproxy from in memory inventory
-include_install: false

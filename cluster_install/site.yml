@@ -88,8 +88,7 @@
 
   roles:
       # Role to install haproxy and configure it for the openshift cluster - requires in memory inventory from provisioning play above
-    - role: haproxy_configure
-      include_install: true
+    - haproxy_configure
 
 - name: While bootstrap is running provision the workers and the wait for bootstrap to complete
   hosts: localhost
@@ -134,8 +133,7 @@
 
   roles:
       # Role to install haproxy and configure it for the openshift cluster - requires in memory inventory from provisioning play above
-    - role: haproxy_configure
-      include_install: false
+    - haproxy_configure
 
   # Once bootstrap is complete we can use rpm-ostree to install the RHEV guest agent and reboot the machines
   # TODO Need to check if this is done already to stop unnecesary reboots
