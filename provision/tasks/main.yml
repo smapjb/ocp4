@@ -15,7 +15,6 @@
       auth: "{{ ovirt_auth }}"
       pattern: name="{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
 
-  # Conditional Block only runs when machine does not exist TODO except for bootstrap which gets recreated each time
   - block:
     - block:
       - name: Create a disk for the new VM
@@ -164,11 +163,6 @@
     add_host:
       name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
       groups: "{{ node_type }}"
-  - name: Add the bootstrap server to the master group
-    add_host:
-      name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
-      groups: "master"
-    when: hostname_prefix[0] == 'bootstrap'
 
   always:
   - name: Always revoke the SSO token

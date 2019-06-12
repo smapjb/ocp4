@@ -1,12 +1,45 @@
 ---
-- name: Provision the machines needed to bootstrap an openshift 4.1 cluster
+- name: Set up installation resources needed to bootstrap an openshift 4.1 cluster
   hosts: localhost
   gather_facts: False
+
+  vars:
+    # use a file called bootstrap as a flag to determine whether this is first run or not
+    file_exists: "{{ lookup('first_found', './' + cluster_name + '/bootstrap', errors='ignore' ) }}"
 
   roles:
     # Download the installation program and set up the boot resources and ignition config
     - pre_install
 
+    - role: provision
+      host_memory: 16
+      sockets: 4
+      disk_size: 8
+      node_type: bootstrap
+      machine_type: rhcos
+      hostname_prefix:
+        - bootstrap
+      when: file_exists | length == 0
+
+  tasks:
+    - block:
+      - name: Add the bootstrap server to the master group
+        add_host:
+          name: "bootstrap.{{ cluster_name }}.internal.croftvillas.com"
+          groups: "master"
+      - name: Write flag into installation directory to indicate that bootstrap has been done
+        file:
+          path: "{{ './' + cluster_name + '/bootstrap' }}"
+          state: touch
+      when: file_exists | length == 0
+
+
+
+- name: Provision the permanent cluster machines
+  hosts: localhost
+  gather_facts: False
+
+  roles:
     # Provision the machines TODO wrap these into loops
     - role: provision
       host_memory: 2
@@ -17,15 +50,6 @@
         - haproxy
         - api
         - api-int
-
-    - role: provision
-      host_memory: 16
-      sockets: 4
-      disk_size: 8
-      node_type: bootstrap
-      machine_type: rhcos
-      hostname_prefix:
-        - bootstrap
 
     - role: provision
       host_memory: 16
