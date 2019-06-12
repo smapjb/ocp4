@@ -35,8 +35,6 @@ RUN yum install -y libcurl-devel nss-devel libxml2-devel gcc && \
     rm -rf /var/cache/yum
 RUN mkdir -p /var/lib/awx/venv/ansible_ovirt
 RUN virtualenv --system-site-packages /var/lib/awx/venv/ansible_ovirt
-RUN mkdir -p /var/lib/awx/venv/ansible_monkey
-RUN virtualenv --system-site-packages /var/lib/awx/venv/ansible_monkey
 RUN cp -a /var/lib/awx/venv/ansible/lib64/python2.7/site-packages/* /var/lib/awx/venv/ansible_ovirt/lib64/python2.7/site-packages/
 RUN export PYCURL_SSL_LIBRARY=nss ; sh -c ". /var/lib/awx/venv/ansible_ovirt/bin/activate ; pip install --upgrade ovirt-engine-sdk-python ansible"
 RUN yum erase -y libcurl-devel nss-devel libxml2-devel gcc && \
@@ -50,3 +48,5 @@ podman login --authfile=/tmp/auth.json --tls-verify=false  -p <magic_token> -u u
 podman push --authfile=/tmp/auth.json --tls-verify=false docker://docker-registry-default.apps.internal.croftvillas.com/tower-prod/ansible-tower:3.5.0
 
 Where tower-prod is the namespace in openshift where my tower instance is running
+
+Inside openshift change stateful set to refer to image as docker-registry.default.svc:5000/tower-prod/ansible-tower:3.5.0

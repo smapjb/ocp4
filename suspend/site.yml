@@ -4,10 +4,6 @@
   gather_facts: False
   vars:
     machine_state: suspended
-    rhev_hosts:
-     - rhev02
-     - rhev03
-     - rhev05
 
   tasks:
     - block:
@@ -35,13 +31,13 @@
           auth: "{{ ovirt_auth }}"
           cluster: "Cluster01"
           name: "{{ item.name }}"
-          state: suspended
+          state: "{{ machine_state }}"
 #          bios_type: "{{ item.bios.type }}"
           timeout: '300'
         async: '300'
         poll: '0'
         with_items:  "{{ ovirt_vms }}"
-        register: suspended
+        register: progress
 
       - name: Check provisioning status
         async_status: jid={{ item.ansible_job_id }}
@@ -49,7 +45,7 @@
         until: job_result.finished
         retries: 100
         delay: 15
-        with_items: "{{ suspended.results }}"
+        with_items: "{{ progress.results }}"
 
       always:
       - name: Always revoke the SSO token
