@@ -34,13 +34,13 @@
       when: file_exists | length == 0
 
 
-
-- name: Provision the permanent cluster machines
+- name: Provision the permanent cluster master machines and haproxy
   hosts: localhost
   gather_facts: False
 
   roles:
-    # Provision the machines TODO wrap these into loops
+    # Cannot asyncronously loop over an include or role - and looping over a role include is about as many lines of code for the number of machines that we are provisioning
+    # Best option is to add async directly into the provision role and pass a sequence start / end variables
     - role: provision
       host_memory: 2
       sockets: 1
@@ -81,6 +81,21 @@
         - master02
         - etcd-2
 
+  # Now that all the machines have been provisioned we can configure haproxy (validation of the config will fail if machines are not set up correctly)
+- name: Install and configure haproxy
+  hosts: "haproxy.{{ cluster_name }}.internal.croftvillas.com"
+  remote_user: root
+
+  roles:
+      # Role to install haproxy and configure it for the openshift cluster - requires in memory inventory from provisioning play above
+    - role: haproxy_configure
+      include_install: true
+
+- name: While bootstrap is running provision the workers and the wait for bootstrap to complete
+  hosts: localhost
+  gather_facts: False
+
+  roles:
     - role: provision
       host_memory: 8
       sockets: 2
@@ -108,25 +123,22 @@
       hostname_prefix:
         - worker03
 
+  tasks:
+    - name: Poll logs until bootstrap process is complete
+      command: "./openshift-install --dir={{ cluster_name }} wait-for bootstrap-complete --log-level debug"
 
   # Now that all the machines have been provisioned we can configure haproxy (validation of the config will fail if machines are not set up correctly)
-- name: Configure haproxy
+- name: Add the workers into haproxy
   hosts: "haproxy.{{ cluster_name }}.internal.croftvillas.com"
   remote_user: root
 
   roles:
       # Role to install haproxy and configure it for the openshift cluster - requires in memory inventory from provisioning play above
-    - haproxy_configure
-
-- name: Wait for the bootstrap process to complete
-  hosts: localhost
-  gather_facts: False
-
-  tasks:
-    - name: Poll logs until bootstrap process is complete
-      command: "./openshift-install --dir={{ cluster_name }} wait-for bootstrap-complete --log-level debug"
+    - role: haproxy_configure
+      include_install: false
 
   # Once bootstrap is complete we can use rpm-ostree to install the RHEV guest agent and reboot the machines
+  # TODO Need to check if this is done already to stop unnecesary reboots
 - name: This playbook installs the guest agent on rhcos nodes
   hosts: worker:master:!bootstrap
   remote_user: core
@@ -142,7 +154,6 @@
     - name: Reboot new host
       reboot:
 
-  # Also on the decommissioning TODO bootstrap gets reprovisioned on second playbook run
 - name: Decommission the bootstrap server and remove it from DNS
   hosts: localhost
   gather_facts: False
