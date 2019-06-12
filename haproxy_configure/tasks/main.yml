@@ -77,7 +77,7 @@
 
   - name: Ensure HAProxy is started and enabled on boot.
     service: name=haproxy state=started enabled=yes
-  when: include_install
+  when: include_install | bool
 
 - name: Configuration HAProxy from in memory inventory.
   template:
