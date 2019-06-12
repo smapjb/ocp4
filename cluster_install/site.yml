@@ -148,9 +148,9 @@
   tasks:
     - name: Install the guest agent on the new node
       command: "rpm-ostree install --idempotent {{ guest_agent }}"
-      # Not sure whether we need to reboot the machines or not here
-    - name: Reboot new host
-      reboot:
+#      # Not sure whether we need to reboot the machines or not here
+#    - name: Reboot new host
+#      reboot:
 
 - name: Decommission the bootstrap server and remove it from DNS
   hosts: localhost
