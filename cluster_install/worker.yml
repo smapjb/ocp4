@@ -1,0 +1,35 @@
+- name: While bootstrap is running provision the workers and the wait for bootstrap to complete
+  hosts: localhost
+  gather_facts: False
+
+  roles:
+    - role: provision
+      host_memory: 8
+      sockets: 2
+      disk_size: 20
+      node_type: worker
+      machine_type: rhcos
+      hostname_prefix:
+        - worker01
+
+    - role: provision
+      host_memory: 8
+      sockets: 2
+      disk_size: 20
+      node_type: worker
+      machine_type: rhcos
+      hostname_prefix:
+        - worker02
+
+    - role: provision
+      host_memory: 8
+      sockets: 2
+      disk_size: 20
+      node_type: worker
+      machine_type: rhcos
+      hostname_prefix:
+        - worker03
+
+  tasks:
+    - name: Poll logs until bootstrap process is complete
+      command: "./openshift-install --dir={{ cluster_name }} wait-for bootstrap-complete --log-level debug"
