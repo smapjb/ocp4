@@ -1,0 +1,50 @@
+- name: Decommission the bootstrap server and remove it from DNS
+  hosts: localhost
+  gather_facts: False
+
+  roles:
+    - role: decommission
+      hostname_prefix:
+        - bootstrap
+
+  tasks:
+    - name: Remove bootstrap server from haproxy config.
+      lineinfile:
+        regexp: "bootstrap"
+        dest: /etc/haproxy/haproxy.cfg
+        state: absent
+      delegate_to: haproxy.{{ cluster_name }}.internal.croftvillas.com
+      remote_user: root
+      notify: Reload haproxy
+
+      # There is a timing issue here - keep retrying for a minute
+    - name: Patch the image registry
+      command: "./oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{{ patch }}'"
+      vars:
+        patch: '{"spec":{"storage":{"emptyDir":{}}}}'
+      environment:
+        KUBECONFIG: ./{{ cluster_name }}/auth/kubeconfig
+      retries: 10
+      delay: 30
+      register: result
+      until: result.rc == 0
+
+    - name: Wait for installation to finish
+      command: "./openshift-install --dir={{ cluster_name }} wait-for install-complete --log-level debug"
+      register: install_output
+
+    - name: Print the kubeconfig file to stdout
+      debug:
+        msg: "{{lookup('file', './' + cluster_name + '/auth/kubeconfig' )   }}"
+
+    - name: Print the kubeadmin password to stdout
+      debug:
+        msg: "{{lookup('file', './' + cluster_name + '/auth/kubeadmin-password' )   }}"
+
+  handlers:
+    - name: Reload haproxy
+      systemd:
+        name: haproxy
+        state: reloaded
+      delegate_to: haproxy.{{ cluster_name }}.internal.croftvillas.com
+      remote_user: root

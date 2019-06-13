@@ -1,0 +1,21 @@
+  # Once bootstrap is complete we can use rpm-ostree to install the RHEV guest agent and reboot the machines
+  # TODO Need to check if this is done already to stop unnecesary reboots
+- name: This playbook installs the guest agent on rhcos nodes
+  hosts: worker:master:!bootstrap
+  remote_user: core
+  become: true
+
+  vars:
+    guest_agent: "http://rpmfind.net/linux/centos/7.6.1810/os/x86_64/Packages/qemu-guest-agent-2.12.0-2.el7.x86_64.rpm"
+
+  tasks:
+    - name: Install the guest agent on the new node
+      command: "rpm-ostree install --idempotent {{ guest_agent }}"
+      register: ostree_reboot
+      changed_when: ostree_reboot.stdout.find('systemctl reboot') != -1
+
+      # if we installed the qemu-agent then safest way to apply change is to reboot
+    - name: Reboot new host
+      reboot:
+      when: ostree_reboot.changed
+

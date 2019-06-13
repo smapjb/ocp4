@@ -1,0 +1,46 @@
+- name: Provision the permanent cluster master machines and haproxy
+  hosts: localhost
+  gather_facts: False
+
+  roles:
+    # Cannot asyncronously loop over an include or role - and looping over a role include is about as many lines of code for the number of machines that we are provisioning
+    # Best option is to add async directly into the provision role and pass a sequence start / end variables
+    - role: provision
+      host_memory: 2
+      sockets: 1
+      node_type: haproxy
+      machine_type: rhel
+      hostname_prefix:
+        - haproxy
+        - api
+        - api-int
+
+    - role: provision
+      host_memory: 16
+      sockets: 4
+      disk_size: 40
+      node_type: master
+      machine_type: rhcos
+      hostname_prefix:
+        - master00
+        - etcd-0
+
+    - role: provision
+      host_memory: 16
+      sockets: 4
+      disk_size: 40
+      node_type: master
+      machine_type: rhcos
+      hostname_prefix:
+        - master01
+        - etcd-1
+
+    - role: provision
+      host_memory: 16
+      sockets: 4
+      disk_size: 40
+      node_type: master
+      machine_type: rhcos
+      hostname_prefix:
+        - master02
+        - etcd-2
