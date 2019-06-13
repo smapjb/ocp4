@@ -5,7 +5,7 @@
     name: ovirt-guest-agent
     state: started
 
-- name: restart haproxy
+- name: reload haproxy
   service:
     name: haproxy
-    state: restarted
+    state: reloaded
