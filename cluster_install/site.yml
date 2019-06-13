@@ -148,9 +148,13 @@
   tasks:
     - name: Install the guest agent on the new node
       command: "rpm-ostree install --idempotent {{ guest_agent }}"
-#      # Not sure whether we need to reboot the machines or not here
-#    - name: Reboot new host
-#      reboot:
+      register: ostree_reboot
+      changed_when: ostree_reboot.stdout.find('systemctl reboot') != -1
+
+      # if we installed the qemu-agent then safest way to apply change is to reboot
+    - name: Reboot new host
+      reboot:
+      when: ostree_reboot.changed
 
 - name: Decommission the bootstrap server and remove it from DNS
   hosts: localhost
