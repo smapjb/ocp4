@@ -10,7 +10,8 @@
       ca_file: ../pki-resource.cer
       password: "{{ ovirt_password }}"
 
-    #  Build up hosts file data object, and add primary hostname into in memory inventory
+    #  Build up hosts file data object, example below
+    #  adds primary hostname into the in-memory inventory
     #
     #  hosts_file:
     #    bootstrap.ocp4.internal.croftvillas.com:

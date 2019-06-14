@@ -10,10 +10,6 @@
   vars:
     query: "nics[*].mac.address"
 
-- name: <Single Machine> Print out the object that we have
-  debug:
-    msg: "{{ ovirt_vms[0].name }} and {{ ovirt_vms[0].nics[0].mac.address }}"
-
   # Here we need to assert that the facts object only returns the number of machines we are dealing with
 - block:
   - name: <Single Machine> Wait until the address has been given out
