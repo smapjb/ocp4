@@ -1,0 +1,26 @@
+
+- name: Create a disk for the new VM
+  ovirt_disk:
+    auth: "{{ ovirt_auth }}"
+    name: "{{ hostname_prefix[0] }}{{ item }}_{{ cluster_name }}_disk"
+    size: "{{ disk_size }}GiB"
+    storage_domain: QNAP_SD
+    interface: virtio
+  async: '300'
+  poll: '0'
+  with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="%01d"
+  register: new_disks
+
+- name: Check disk creation status
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 20
+  delay: 5
+  with_items: "{{ new_disks.results }}"
+
+- name: Print out the information about the new disks
+  debug:
+    var: new_disks
+

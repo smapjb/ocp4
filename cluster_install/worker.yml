@@ -4,31 +4,16 @@
 
   roles:
     - role: provision
+      single_machine: False
+      sequence_start: 0
+      sequence_end: 4
       host_memory: 8
       sockets: 2
       disk_size: 20
       node_type: worker
       machine_type: rhcos
       hostname_prefix:
-        - worker01
-
-    - role: provision
-      host_memory: 8
-      sockets: 2
-      disk_size: 20
-      node_type: worker
-      machine_type: rhcos
-      hostname_prefix:
-        - worker02
-
-    - role: provision
-      host_memory: 8
-      sockets: 2
-      disk_size: 20
-      node_type: worker
-      machine_type: rhcos
-      hostname_prefix:
-        - worker03
+        - worker0
 
   tasks:
     - name: Poll logs until bootstrap process is complete

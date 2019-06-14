@@ -12,6 +12,7 @@
     - pre_install
 
     - role: provision
+      single_machine: True
       host_memory: 16
       sockets: 4
       disk_size: 8

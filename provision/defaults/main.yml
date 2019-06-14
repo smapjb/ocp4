@@ -1,6 +1,7 @@
 ---
 # defaults file for provision
 gateway: gateway.internal.croftvillas.com
+domain_name: internal.croftvillas.com
 cluster_name: 'ocp4'
 cluster_version: '4.1.0'
 node_type: worker
@@ -8,6 +9,13 @@ host_memory: 8
 sockets: 2
 disk_size: 8
 
+sequence_start: 0
+sequence_end: 4
+single_machine: true
 
-#host_memory: 2
-#sockets: 1
+#host_memory: 16
+#sockets: 4
+#
+#hostname_prefix:
+#  - master0
+#  - etcd-

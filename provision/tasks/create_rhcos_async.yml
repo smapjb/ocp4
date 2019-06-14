@@ -1,0 +1,31 @@
+
+- name: Create new VMs
+  ovirt_vm:
+    auth: "{{ ovirt_auth }}"
+    cluster: "Cluster01"
+    name: "{{ hostname_prefix[0] }}{{ item }}.{{ cluster_name }}.internal.croftvillas.com"
+    description: "{{ cluster_name }} {{ node_type }}"
+    comment: "{{ cluster_name }}"
+    state: running
+    memory: "{{ host_memory }}GiB"
+    cpu_sockets: "{{ sockets }}"
+    kernel_path: "iso://rhcos-{{ cluster_version }}-x86_64-installer-kernel"
+    initrd_path: "iso://rhcos-{{ cluster_version }}-x86_64-installer-initramfs.img"
+    kernel_params: "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://{{ gateway }}/rhcos-{{ cluster_version }}-x86_64-metal-bios.raw.gz coreos.inst.ignition_url=http://{{ gateway }}/{{ cluster_name }}/{{ node_type }}.ign"
+    kernel_params_persist: yes
+    fetch_nested: true
+    nested_attributes:
+      - mac
+    graphical_console:
+      protocol: vnc
+    type: server
+    operating_system: "rhel_8x64"
+    disks:
+      - name: "{{ hostname_prefix[0] }}{{ item }}_{{ cluster_name }}_disk"
+    nics:
+      - name: nic1
+        profile_name: "ovirtmgmt"
+  async: '300'
+  poll: '0'
+  with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="%01d"
+
