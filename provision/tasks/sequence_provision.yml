@@ -6,7 +6,7 @@
 
 - name: <Multiple Machines> Set fact with machine existence
   set_fact:
-    machine_exists: (ovirt_vms | length) > 0
+    machine_exists: "{{ ovirt_vms | length > 0 }}"
 
 - block:
   - name: <Multiple Machines> Asynchronously create the disks wait for them to finish

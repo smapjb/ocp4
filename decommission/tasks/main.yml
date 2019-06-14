@@ -20,7 +20,7 @@
 
   - name: <Single Machine> Set fact with machine existence
     set_fact:
-      machine_exists: ovirt_vms | length
+      machine_exists: "{{ ovirt_vms | length > 0 }}"
 
 
   # Conditional Block only runs when machine does not exist
