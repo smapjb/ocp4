@@ -1,10 +1,35 @@
 # Refactored the plays into imports so that we can construct a workflow in Tower
+
+# Install and configure haproxy to that bootstrap will be ready to go
 - import_playbook: haproxy.yml
+
+# Install and boot the bootstrap server
 - import_playbook: bootstrap.yml
+
+# Add Bootstrap into the load balancer
 - import_playbook: haproxy.yml
+
+# Provision the masters - they will boot and be able to talk
+# to the bootstrap server starting the bootstrap process
 - import_playbook: master.yml
+
+# Add the master servers into the load balancer
 - import_playbook: haproxy.yml
+
+# Provision the workers while bootstrap is kicking off
+# This playbook weights for bootstrap to complete by which
+# time all hosts are up
 - import_playbook: worker.yml
+
+# Add the workers into the load balancer
 - import_playbook: haproxy.yml
+
+# All hosts are up, bootstrap is complete - install the qemu guest agent
+# And reboot the servers
 - import_playbook: guest_agent.yml
+
+# Finalise the install, remove the bootstrap server, reload the
+# load balancer and wait for install scripts to complete
+# Finally print the kubeadmin and kubeconfig to stdout so we can
+# Connect to our server
 - import_playbook: finalise.yml

@@ -2,6 +2,7 @@
 # tasks file for haproxy_configure
 - include_vars: ../ovirt_Password.yml
 
+# Need to do a better check here, subscribe check takes an age
 - name: Subscribe this system to the RHN
   redhat_subscription:
     state: present

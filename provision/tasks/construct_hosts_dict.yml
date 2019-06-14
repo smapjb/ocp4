@@ -1,3 +1,14 @@
+
+#  Build up hosts file data object, example below
+#  adds primary hostname into the in-memory inventory
+#
+#  hosts_file:
+#    bootstrap.ocp4.internal.croftvillas.com:
+#    - bootstrap.ocp4.internal.croftvillas.com
+#    master00.ocp4.internal.croftvillas.com:
+#    - master00.monkey.internal.croftvillas.com
+#    - etc-0.ocp4.internal.croftvillas.com
+
 - block:
   - name: <Single Machine> Collect the hostnames together into a dictionary
     set_fact:
