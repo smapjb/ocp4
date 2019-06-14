@@ -1,6 +1,8 @@
 # Refactored the plays into imports so that we can construct a workflow in Tower
+- import_playbook: haproxy.yml
 - import_playbook: bootstrap.yml
-- import_playbook: cluster.yml
+- import_playbook: haproxy.yml
+- import_playbook: master.yml
 - import_playbook: haproxy.yml
 - import_playbook: worker.yml
 - import_playbook: haproxy.yml

@@ -18,6 +18,11 @@
         - mac
       pattern: name="{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
 
+  - name: <Single Machine> Set fact with machine existence
+    set_fact:
+      machine_exists: ovirt_vms | length
+
+
   # Conditional Block only runs when machine does not exist
   - block:
     - name: Decommission the machine from RHV
@@ -69,7 +74,7 @@
       remote_user: root
       delegate_to: "{{ gateway }}"
 
-    when: ovirt_vms | length | bool
+    when: machine_exists | bool
 
   always:
   - name: Always revoke the SSO token

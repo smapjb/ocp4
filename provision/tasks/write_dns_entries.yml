@@ -1,0 +1,108 @@
+- name: Get all the info including the mac addrs
+  ovirt_vm_facts:
+    auth: "{{ ovirt_auth }}"
+    pattern: "name={{ hostname_prefix[0] }}*.{{ cluster_name }}.{{ domain_name }}"
+    fetch_nested: true
+    nested_attributes: mac
+  until: (ovirt_vms | length) > 0 and (ovirt_vms | first | json_query(query))
+  retries: 5
+  delay: 2
+  vars:
+    query: "nics[*].mac.address"
+
+- name: <Single Machine> Print out the object that we have
+  debug:
+    msg: "{{ ovirt_vms[0].name }} and {{ ovirt_vms[0].nics[0].mac.address }}"
+
+  # Here we need to assert that the facts object only returns the number of machines we are dealing with
+- block:
+  - name: <Single Machine> Wait until the address has been given out
+    uri:
+      url: "https://{{ gateway }}:81/api/v1/dhcp/leases"
+      return_content: yes
+      headers:
+         x-api-key: "{{ apikey }}"
+    until: (leases.json.data | dict2items | json_query(query) | length) > 0
+    retries: 10
+    delay: 5
+    vars:
+      query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ ovirt_vms[0].nics[0].mac.address }}'].ipv4"
+    register: leases
+
+  - name: <Single Machine> Get all DHCP leases from the ClearOS Gateway API as a lookup
+    uri:
+      url: "https://{{ gateway }}:81/api/v1/dhcp/leases"
+      return_content: yes
+      headers:
+         x-api-key: "{{ apikey }}"
+    register: leases
+
+  - name: <Single Machine> Print out the object that we have
+    debug:
+      msg: "{{ ovirt_vms[0].name }} and {{ ovirt_vms[0].nics[0].mac.address }}"
+      verbosity: 1
+
+  - name: <Single Machine> Add the hosts file line to the ClearOS Gateway
+    lineinfile:
+      line: "{{ rhcos_iface_address[0] }} {{ hosts_file[machine_name] | join(' ') }}"
+      dest: /etc/hosts
+      state: present
+    remote_user: root
+    delegate_to: "{{ gateway }}"
+    # By querying the ovirt_vms object we are sure to line up IP, Mac and Name
+    vars:
+      query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ ovirt_vms[0].nics[0].mac.address }}'].ipv4"
+      machine_name: "{{ ovirt_vms[0].name }}"
+      rhcos_iface_address: "{{ leases.json.data | dict2items | json_query(query)}}"
+  when: (single_machine | bool)
+
+- block:
+  - name: <Multiple Machines> Wait until the address has been given out
+    uri:
+      url: "https://{{ gateway }}:81/api/v1/dhcp/leases"
+      return_content: yes
+      headers:
+         x-api-key: "{{ apikey }}"
+    until: (leases.json.data | dict2items | json_query(query) | length) > 0
+    retries: 10
+    delay: 5
+    vars:
+      query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ ovirt_vms[item|int].nics[0].mac.address }}'].ipv4"
+    with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="%01d"
+    register: leases
+
+  - name: <Multiple Machines> Get all DHCP leases from the ClearOS Gateway API as a lookup
+    uri:
+      url: "https://{{ gateway }}:81/api/v1/dhcp/leases"
+      return_content: yes
+      headers:
+         x-api-key: "{{ apikey }}"
+    register: leases
+
+  - name: <Multiple Machines> Print out the objects that we have
+    debug:
+      msg: "{{ ovirt_vms[item|int].name }} and {{ ovirt_vms[item|int].nics[0].mac.address }}"
+      verbosity: 1
+    with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="%01d"
+
+  - name: <Multiple Machines> Add the hosts file line to the ClearOS Gateway
+    lineinfile:
+      line: "{{ rhcos_iface_address[0] }} {{ hosts_file[machine_name] | join(' ') }}"
+      dest: /etc/hosts
+      state: present
+    remote_user: root
+    delegate_to: "{{ gateway }}"
+    # By querying the ovirt_vms object we are sure to line up IP, Mac and Name
+    vars:
+      query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ ovirt_vms[item|int].nics[0].mac.address }}'].ipv4"
+      machine_name: "{{ ovirt_vms[item|int].name }}"
+      rhcos_iface_address: "{{ leases.json.data | dict2items | json_query(query)}}"
+    with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="%01d"
+  when: not (single_machine | bool)
+
+- name: Restart dnsmasq on ClearOS Gateway to make sure the added host is picked up in DNS
+  systemd:
+    name: dnsmasq
+    state: restarted
+  remote_user: root
+  delegate_to: "{{ gateway }}"

@@ -1,0 +1,37 @@
+- block:
+  - name: <Single Machine> Collect the hostnames together into a dictionary
+    set_fact:
+      hosts_file: "{{ hosts_file | default({}) | combine({ hostname_key: hosts_file[hostname_key] | default([]) + [ hostname_value ]  }) }}"
+    vars:
+      hostname_suffix: "{{ '.' + cluster_name + '.' + domain_name }}"
+      hostname_key:  "{{ hostname_prefix[0] + hostname_suffix }}"
+      hostname_value: "{{ item + hostname_suffix }}"
+    with_items:
+     - "{{ hostname_prefix }}"
+
+  # at this stage the host should be created so make sure it is in the inventory
+  - name: <Single Machine> Add the new hosts into the in memory inventory for use in haproxy configuration
+    add_host:
+      name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
+      groups: "{{ node_type }}"
+  when: (single_machine | bool)
+
+- block:
+  - name: <Multiple Machines> Collect the hostnames together into a dictionary
+    set_fact:
+      hosts_file: "{{ hosts_file | default({}) | combine({ hostname_key: hosts_file[hostname_key] | default([]) + [ hostname_value ]  }) }}"
+    vars:
+      hostname_suffix: "{{ (item.0) | string + '.' + cluster_name + '.' + domain_name }}"
+      hostname_key:  "{{ hostname_prefix[0] + hostname_suffix }}"
+      hostname_value: "{{ item.1 + hostname_suffix }}"
+    with_nested:
+     - "{{ range( sequence_start | int, ( sequence_end + 1 )) | list }}"
+     - "{{ hostname_prefix }}"
+
+  # at this stage the host should be created so make sure it is in the inventory
+  - name: <Multiple Machines> Add the new hosts into the in memory inventory for use in haproxy configuration
+    add_host:
+      name: "{{ hostname_prefix[0] }}{{ item }}.{{ cluster_name }}.{{ domain_name }}"
+      groups: "{{ node_type }}"
+    with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="%01d"
+  when: not (single_machine | bool)

@@ -1,4 +1,22 @@
-  # Now that all the machines have been provisioned we can configure haproxy (validation of the config will fail if machines are not set up correctly)
+- name: Provision the permanent cluster master machines and haproxy
+  hosts: localhost
+  gather_facts: False
+
+  roles:
+    # Cannot asyncronously loop over an include or role - and looping over a role include is about as many lines of code for the number of machines that we are provisioning
+    # Best option is to add async directly into the provision role and pass a sequence start / end variables
+    - role: provision
+      single_machine: True
+      host_memory: 2
+      sockets: 1
+      node_type: haproxy
+      machine_type: rhel
+      hostname_prefix:
+        - haproxy
+        - api
+        - api-int
+
+# Now that all the machines have been provisioned we can configure haproxy (validation of the config will fail if machines are not set up correctly)
 - name: Install and configure haproxy
   hosts: "haproxy.{{ cluster_name }}.internal.croftvillas.com"
   remote_user: root
