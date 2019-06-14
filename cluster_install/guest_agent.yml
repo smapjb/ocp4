@@ -17,7 +17,5 @@
       # if we installed the qemu-agent then safest way to apply change is to reboot fire and forget
     - name: Reboot new host
       reboot:
-      async: 1
-      poll: 0
       when: ostree_reboot.changed
 
