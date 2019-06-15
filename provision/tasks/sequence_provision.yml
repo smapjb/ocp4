@@ -1,8 +1,17 @@
 # tasks file for provision
-- name: <Multiple Machines> Check if the machines already exists
+# By searching for only these machines we allow for subsequently numbered machines to be provisioned.
+# ie worker[0:2] may already be provisioned we can run role again with non colliding range worker[3:6]
+- name: <Multiple Machines> Construct query to search for any of the machines in sequence
+  set_fact:
+     search_pattern: "{{ search_pattern | default([]) + [hostname_pattern] }}"
+  vars:
+    hostname_pattern:  " or name={{ hostname_prefix[0] + (item) | string + '.' + cluster_name + '.' + domain_name }}"
+  with_sequence: start="{{ sequence_start + 1 }}" end="{{ sequence_end }}" format="%01d"
+
+- name: <Multiple Machines> Check if any of the machine names overlap with already existing machines
   ovirt_vm_facts:
     auth: "{{ ovirt_auth }}"
-    pattern: name="{{ hostname_prefix[0] }}*.{{ cluster_name }}.internal.croftvillas.com"
+    pattern: "{{ hostname_prefix[0] }}{{ sequence_start }} {{ search_pattern | join(' ') }}"
 
 - name: <Multiple Machines> Set fact with machine existence
   set_fact:
