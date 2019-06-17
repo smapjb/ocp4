@@ -23,7 +23,7 @@
   # at this stage the host should be created so make sure it is in the inventory
   - name: <Single Machine> Add the new hosts into the in memory inventory for use in haproxy configuration
     add_host:
-      name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
+      name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
       groups: "{{ node_type }}"
   when: (single_machine | bool)
 

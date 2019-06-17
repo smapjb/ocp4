@@ -1,4 +1,9 @@
 ---
 # defaults file for decommission
-gateway: gateway.internal.croftvillas.com  # gateway is where dnsmasq is installed
+domain_name: internal.croftvillas.com
+gateway: "gateway.{{ domain_name }}"  # gateway is where dnsmasq is installed
+rhev_manager_host: "rhvm.{{ domain_name }}"
 cluster_name: 'ocp4'
+
+ovirt_username: admin@internal
+

@@ -5,8 +5,8 @@
 
   - name: Obtain SSO token using username/password creds.
     ovirt_auth:
-      url: https://rhvm.internal.croftvillas.com/ovirt-engine/api
-      username: admin@internal
+      url: "https://{{ rhev_manager_host }}/ovirt-engine/api"
+      username: "{{ ovirt_username }}"
       ca_file: ../pki-resource.cer
       password: "{{ ovirt_password }}"
 

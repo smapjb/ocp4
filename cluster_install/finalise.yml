@@ -13,7 +13,7 @@
         regexp: "bootstrap"
         dest: /etc/haproxy/haproxy.cfg
         state: absent
-      delegate_to: haproxy.{{ cluster_name }}.internal.croftvillas.com
+      delegate_to: haproxy.{{ cluster_name }}.{{ domain_name }}
       remote_user: root
       notify: Reload haproxy
 
@@ -46,5 +46,5 @@
       systemd:
         name: haproxy
         state: reloaded
-      delegate_to: haproxy.{{ cluster_name }}.internal.croftvillas.com
+      delegate_to: haproxy.{{ cluster_name }}.{{ domain_name }}
       remote_user: root

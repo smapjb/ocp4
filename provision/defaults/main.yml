@@ -1,9 +1,13 @@
 ---
 # defaults file for provision
-gateway: gateway.internal.croftvillas.com
 domain_name: internal.croftvillas.com
+gateway: "gateway.{{ domain_name }}"
+rhev_manager_host: "rhvm.{{ domain_name }}"
 cluster_name: 'ocp4'
 cluster_version: '4.1.0'
+
+ovirt_username: admin@internal
+
 node_type: worker
 host_memory: 8
 sockets: 2

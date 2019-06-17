@@ -5,15 +5,15 @@
 
   - name: Obtain SSO token using username/password creds.
     ovirt_auth:
-      url: https://rhvm.internal.croftvillas.com/ovirt-engine/api
-      username: admin@internal
+      url: "https://{{ rhev_manager_host }}/ovirt-engine/api"
+      username: "{{ ovirt_username }}"
       ca_file: ../pki-resource.cer
       password: "{{ ovirt_password }}"
 
   - name: Check if the machine already exists
     ovirt_vm_facts:
       auth: "{{ ovirt_auth }}"
-      pattern: name="{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
+      pattern: name="{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
 
   - name: <Single Machine> Set fact with machine existence
     set_fact:
@@ -26,7 +26,7 @@
       ovirt_vm:
         auth: "{{ ovirt_auth }}"
         cluster: "Cluster01"
-        name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
+        name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
         state: absent
     - name: extract the mac address of the newly created machine
       set_fact:
@@ -48,7 +48,7 @@
 
     - name: Construct the /etc/hosts file line for the decommissioned server
       set_fact:
-        the_line: "{{ the_line|default([]) + [ item + '.' + cluster_name + '.internal.croftvillas.com' ] }}"
+        the_line: "{{ the_line|default([]) + [ item + '.' + cluster_name + domain_name ] }}"
       with_items:
         - "{{ hostname_prefix }}"
 

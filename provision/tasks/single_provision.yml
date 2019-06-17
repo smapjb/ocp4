@@ -3,7 +3,7 @@
 - name: <Single Machine> Check if the machine already exists
   ovirt_vm_facts:
     auth: "{{ ovirt_auth }}"
-    pattern: name="{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
+    pattern: name="{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
 
 - name: <Single Machine> Set fact with machine existence
   set_fact:
@@ -25,7 +25,7 @@
       ovirt_vm:
         auth: "{{ ovirt_auth }}"
         cluster: "Cluster01"
-        name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
+        name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
         description: "{{ cluster_name }} {{node_type}}"
         comment: "{{ cluster_name }}"
         state: running
@@ -56,7 +56,7 @@
         auth: "{{ ovirt_auth }}"
         state: running
         cluster: "Cluster01"
-        name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
+        name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
         description: "{{ cluster_name }} {{node_type}}"
         comment: "{{ cluster_name }}"
         template: rhel7_template
@@ -69,7 +69,7 @@
         graphical_console:
           protocol: vnc
         cloud_init:
-          host_name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
+          host_name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
           authorized_ssh_keys: "{{ ssh_key }}"
     when: machine_type == "rhel"
 
@@ -80,7 +80,7 @@
     ovirt_vm:
       auth: "{{ ovirt_auth }}"
       cluster: "Cluster01"
-      name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.internal.croftvillas.com"
+      name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
       state: running
       type: server
       wait: no

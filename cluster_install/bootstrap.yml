@@ -26,7 +26,7 @@
     - block:
       - name: Add the bootstrap server to the master group
         add_host:
-          name: "bootstrap.{{ cluster_name }}.internal.croftvillas.com"
+          name: "bootstrap.{{ cluster_name }}.{{ domain_name }}"
           groups: "master"
       - name: Write flag into installation directory to indicate that bootstrap has been done
         file:
