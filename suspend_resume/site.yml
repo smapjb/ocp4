@@ -43,7 +43,7 @@
         async_status: jid={{ item.ansible_job_id }}
         register: job_result
         until: job_result.finished
-        retries: 100
+        retries: 20
         delay: 15
         with_items: "{{ progress.results }}"
 
