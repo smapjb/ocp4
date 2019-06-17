@@ -5,7 +5,6 @@
 - name: Determine if rhsm system cert exists
   stat:
     path: '{{ redhat_rhsm_cert_path }}'
-  changed_when: false
   register: subscribed
 
 - block:
@@ -81,7 +80,7 @@
 
   - name: Ensure HAProxy is started and enabled on boot.
     service: name=haproxy state=started enabled=yes
-  when: subscribed.changed
+  when: "{{ subscribed.stat.exists }}"
 
 - name: Configuration HAProxy from in memory inventory.
   template:
