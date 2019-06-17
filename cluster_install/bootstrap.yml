@@ -29,6 +29,7 @@
         add_host:
           name: "bootstrap.{{ cluster_name }}.{{ domain_name }}"
           groups: "master"
+      # TODO use the remote directory as a installation check
       - name: Write flag into installation directory to indicate that bootstrap has been done
         file:
           path: "{{ './' + cluster_name + '/bootstrap' }}"

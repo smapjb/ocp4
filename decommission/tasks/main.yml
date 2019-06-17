@@ -28,6 +28,7 @@
         cluster: "Cluster01"
         name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
         state: absent
+
     - name: extract the mac address of the newly created machine
       set_fact:
         mac_address: "{{ ovirt_vms[0].nics[0].mac.address }}"
