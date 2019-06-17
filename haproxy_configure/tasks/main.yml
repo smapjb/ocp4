@@ -80,7 +80,7 @@
 
   - name: Ensure HAProxy is started and enabled on boot.
     service: name=haproxy state=started enabled=yes
-  when: subscribed.stat.exists | bool
+  when: not subscribed.stat.exists | bool
 
 - name: Configuration HAProxy from in memory inventory.
   template:
