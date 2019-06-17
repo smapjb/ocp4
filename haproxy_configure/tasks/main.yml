@@ -2,16 +2,20 @@
 # tasks file for haproxy_configure
 - include_vars: ../ovirt_Password.yml
 
-# Need to do a better check here, subscribe check takes an age
-- name: Subscribe this system to the RHN
-  redhat_subscription:
-    state: present
-    username: "pcornelius@redhat.com"
-    password: "{{ rhn_password }}"
-    pool_ids: 8a85f98460bfb0470160c2ff250f3e66
+- name: Determine if rhsm system cert exists
+  stat:
+    path: '{{ redhat_rhsm_cert_path }}'
+  changed_when: false
   register: subscribed
 
 - block:
+  - name: Subscribe this system to the RHN
+    redhat_subscription:
+      state: present
+      username: "pcornelius@redhat.com"
+      password: "{{ rhn_password }}"
+      pool_ids: 8a85f98460bfb0470160c2ff250f3e66
+
   - name: Disable all repositories
     command: subscription-manager repos --disable='*'
   - name: Enable RHEL server repositories

@@ -6,3 +6,5 @@ api_port: 6443
 master_port: 22623
 http_port: 80
 https_port: 443
+
+redhat_rhsm_cert_path: '/etc/pki/consumer/cert.pem'
