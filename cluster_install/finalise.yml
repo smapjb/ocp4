@@ -2,6 +2,9 @@
   hosts: localhost
   gather_facts: False
 
+  vars:
+    domain_name: internal.croftvillas.com
+
   roles:
     - role: decommission
       hostname_prefix:
