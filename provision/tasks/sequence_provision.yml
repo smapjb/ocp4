@@ -13,6 +13,10 @@
     auth: "{{ ovirt_auth }}"
     pattern: "{{ hostname_prefix[0] }}{{ sequence_start }} {{ search_pattern | join(' ') }}"
 
+- name: <Multiple Machines> Reset the search_pattern fact ready for next run
+  set_fact:
+    search_pattern: []
+
 - name: <Multiple Machines> Set fact with machine existence
   set_fact:
     machine_exists: "{{ ovirt_vms | length > 0 }}"
