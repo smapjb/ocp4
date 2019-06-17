@@ -13,6 +13,9 @@
   - name: Check if the machine already exists
     ovirt_vm_facts:
       auth: "{{ ovirt_auth }}"
+      fetch_nested: true
+      nested_attributes:
+        - mac
       pattern: name="{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
 
   - name: <Single Machine> Set fact with machine existence
@@ -20,7 +23,7 @@
       machine_exists: "{{ ovirt_vms | length > 0 }}"
 
 
-  # Conditional Block only runs when machine does not exist
+  # Conditional Block only runs when machine exists
   - block:
     - name: Decommission the machine from RHV
       ovirt_vm:
