@@ -1,7 +1,8 @@
 ---
 # defaults file for provision
 cluster_name: 'ocp4'
-cluster_version: '4.1.0'
+cluster_version: '4.1.2'
+rhcos_version: '4.1.0'
 operating_system: 'linux'
 gateway: gateway.internal.croftvillas.com
 rhev_manager: rhvm.internal.croftvillas.com
