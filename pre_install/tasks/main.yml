@@ -77,6 +77,6 @@
     remote_user: root
     delegate_to: "{{ rhev_manager }}"
     with_items:
-      - "rhcos-{{ cluster_version }}-x86_64-installer-initramfs.img"
-      - "rhcos-{{ cluster_version }}-x86_64-installer-kernel"
+      - "rhcos-{{ rhcos_version }}-x86_64-installer-initramfs.img"
+      - "rhcos-{{ rhcos_version }}-x86_64-installer-kernel"
   when: cluster_install_exists.changed
