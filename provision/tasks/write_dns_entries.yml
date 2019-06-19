@@ -1,17 +1,17 @@
-- name: Get all the info including the mac addrs
-  ovirt_vm_facts:
-    auth: "{{ ovirt_auth }}"
-    pattern: "name={{ hostname_prefix[0] }}*.{{ cluster_name }}.{{ domain_name }}"
-    fetch_nested: true
-    nested_attributes: mac
-  until: (ovirt_vms | length) > 0 and (ovirt_vms | first | json_query(query))
-  retries: 5
-  delay: 2
-  vars:
-    query: "nics[*].mac.address"
-
   # Here we need to assert that the facts object only returns the number of machines we are dealing with
 - block:
+  - name: <Single Machine> Get all the info including the mac addrs
+    ovirt_vm_facts:
+      auth: "{{ ovirt_auth }}"
+      pattern: "name={{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
+      fetch_nested: true
+      nested_attributes: mac
+    until: (ovirt_vms | length) > 0 and (ovirt_vms | first | json_query(query))
+    retries: 5
+    delay: 2
+    vars:
+      query: "nics[*].mac.address"
+
   - name: <Single Machine> Wait until the address has been given out
     uri:
       url: "https://{{ gateway }}:81/api/v1/dhcp/leases"
@@ -53,6 +53,29 @@
   when: (single_machine | bool)
 
 - block:
+  - name: <Multiple Machines> Construct query to search for just the machines requested
+    set_fact:
+       search_pattern: "{{ search_pattern | default([]) + [hostname_pattern] }}"
+    vars:
+      hostname_pattern:  " or name={{ hostname_prefix[0] + (item) | string + '.' + cluster_name + '.' + domain_name }}"
+    with_sequence: start="{{ sequence_start + 1 }}" end="{{ sequence_end }}" format="%01d"
+
+  - name: <Multiple Machines> Get all the info including the mac addrs
+    ovirt_vm_facts:
+      auth: "{{ ovirt_auth }}"
+      pattern: "{{ hostname_prefix[0] }}{{ sequence_start }} {{ search_pattern | join(' ') }}"
+      fetch_nested: true
+      nested_attributes: mac
+    until: (ovirt_vms | length) > 0 and (ovirt_vms | first | json_query(query))
+    retries: 5
+    delay: 2
+    vars:
+      query: "nics[*].mac.address"
+
+  - name: <Multiple Machines> Reset the search_pattern fact ready for next run
+    set_fact:
+      search_pattern: []
+
   - name: <Multiple Machines> Wait until the address has been given out
     uri:
       url: "https://{{ gateway }}:81/api/v1/dhcp/leases"
@@ -64,7 +87,7 @@
     delay: 5
     vars:
       query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ ovirt_vms[item|int].nics[0].mac.address }}'].ipv4"
-    with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="%01d"
+    with_sequence: start="{{ 0 }}" end="{{ sequence_end - sequence_start }}" format="%01d"
     register: leases
 
   - name: <Multiple Machines> Get all DHCP leases from the ClearOS Gateway API as a lookup
@@ -79,7 +102,7 @@
     debug:
       msg: "{{ ovirt_vms[item|int].name }} and {{ ovirt_vms[item|int].nics[0].mac.address }}"
       verbosity: 1
-    with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="%01d"
+    with_sequence: start="{{ 0 }}" end="{{ sequence_end - sequence_start }}" format="%01d"
 
   - name: <Multiple Machines> Add the hosts file line to the ClearOS Gateway
     lineinfile:
@@ -93,7 +116,7 @@
       query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ ovirt_vms[item|int].nics[0].mac.address }}'].ipv4"
       machine_name: "{{ ovirt_vms[item|int].name }}"
       rhcos_iface_address: "{{ leases.json.data | dict2items | json_query(query)}}"
-    with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="%01d"
+    with_sequence: start="{{ 0 }}" end="{{ sequence_end - sequence_start }}" format="%01d"
   when: not (single_machine | bool)
 
 - name: Restart dnsmasq on ClearOS Gateway to make sure the added host is picked up in DNS

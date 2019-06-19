@@ -1,0 +1,7 @@
+haproxy.ocp4.internal.croftvillas.com
+
+[master]
+master0[0:2].ocp4.internal.croftvillas.com
+
+[worker]
+worker0[0:2].ocp4.internal.croftvillas.com

@@ -1,7 +1,48 @@
 ---
-- name: This is a playbook for cloning a vm in RHEV
+- name: While bootstrap is running provision the workers and the wait for bootstrap to complete
   hosts: localhost
   gather_facts: False
 
   roles:
-    - provision
+    - role: provision
+      single_machine: False
+      sequence_start: 3
+      sequence_end: 5
+      host_memory: 8
+      sockets: 2
+      disk_size: 20
+      node_type: worker
+      machine_type: rhcos
+      hostname_prefix:
+        - worker0
+
+# Now that all the machines have been provisioned we can configure haproxy (validation of the config will fail if machines are not set up correctly)
+- name: Install and configure haproxy
+  hosts: "haproxy.{{ cluster_name }}.internal.croftvillas.com"
+  remote_user: root
+
+  roles:
+      # Role to install haproxy and configure it for the openshift cluster - requires in memory inventory from provisioning play above
+    - haproxy_configure
+
+  # Once bootstrap is complete we can use rpm-ostree to install the RHEV guest agent and reboot the machines
+  # TODO Need to check if this is done already to stop unnecesary reboots
+- name: This playbook installs the guest agent on rhcos nodes
+  hosts: worker:master
+  remote_user: core
+  become: true
+
+  vars:
+    guest_agent: "http://rpmfind.net/linux/centos/7.6.1810/os/x86_64/Packages/qemu-guest-agent-2.12.0-2.el7.x86_64.rpm"
+
+  tasks:
+    - name: Install the guest agent on the new node
+      command: "rpm-ostree install --idempotent {{ guest_agent }}"
+      register: ostree_reboot
+      changed_when: ostree_reboot.stdout.find('systemctl reboot') != -1
+
+      # if we installed the qemu-agent then safest way to apply change is to reboot fire and forget
+    - name: Reboot new host
+      reboot:
+      when: ostree_reboot.changed
+
