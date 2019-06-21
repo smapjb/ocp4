@@ -1,51 +1,88 @@
-http://gateway.internal.croftvillas.com/rhcos-bios.gz
-http://gateway.internal.croftvillas.com/rhcos-uefi.gz
-http://gateway.internal.croftvillas.com/bootstrap.ign
-http://gateway.internal.croftvillas.com/master.ign
-http://gateway.internal.croftvillas.com/worker.ign
-
-Use the following to upload to the iso domain from the RHEV manager.
-
-engine-iso-uploader --iso-domain=QNAP_ISO upload rhcos-410.8.20190509.3-installer-kernel --force
-
-
-
-
-iso://rhcos-410.8.20190509.3-installer-kernel
-
-iso://rhcos-410.8.20190509.3-installer-initramfs.img
-
-nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://gateway/rhcos-uefi.gz coreos.inst.ignition_url=http://gateway/bootstrap.ign
-
-nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://gateway/rhcos-uefi.gz coreos.inst.ignition_url=http://gateway/worker.ign
-
-nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://gateway/rhcos-uefi.gz coreos.inst.ignition_url=http://gateway/master.ign
-
 
 # Find a better place to source this
 http://rpmfind.net/linux/centos/7.6.1810/os/x86_64/Packages/qemu-guest-agent-2.12.0-2.el7.x86_64.rpm
+
+Post config notes - authn
+
+oc create secret generic ldap-secret --from-literal=bindPassword='<password>' -n openshift-config
+
+<<< ldap.yml
+
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: OakCottage
+    mappingMethod: claim
+    type: LDAP
+    ldap:
+      attributes:
+        name:
+        - givenName
+        id:
+        - dn
+        email:
+        - mail
+        preferredUsername:
+        - uid
+      bindDN: "cn=manager,ou=Internal,dc=internal,dc=croftvillas,dc=com"
+      bindPassword:
+        name: ldap-secret
+      insecure: false
+      url: "ldaps://gateway.internal.croftvillas.com:636/ou=Users,ou=Accounts,dc=internal,dc=croftvillas,dc=com?uid"
+
+oc apply -f ./ldap.yml 
+
+Note - dont need to apply ca.crt config because ldap had proper cert signed by a root ca (LetsEncrypt)
+
+# Login then make user a cluster admin
+
+oc adm policy add-cluster-role-to-user cluster-admin philipc
+
+# remove default secret
+
+oc delete secrets kubeadmin -n kube-system
+
+---
+Router - need to open up the default route for the registry
+oc patch configs.imageregistry.operator.openshift.io/cluster --type merge -p '{"spec":{"defaultRoute":true}}'
+
+// or to subsequently mount NFS patch as follows
+oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"storage":{"pvc":{"claim"}}}}'
+
+
+
+NOTES for building tower image with venv
 
 ---- using buildah and podman to add a venv to the upstream tower container so we can use the latest ovirt modules.
 
 <<< Dockerfile - note need some jiggery with subscription manager.
 FROM registry.access.redhat.com/ansible-tower-35/ansible-tower:3.5.0
 USER root
-RUN yum install -y libcurl-devel nss-devel libxml2-devel gcc && \
+ARG RHN_USER=none
+ARG RHN_PASS=none
+RUN subscription-manager register --username=$RHN_USER --password=$RHN_PASS --auto-attach && \
+    subscription-manager repos --disable='*' && \
+    subscription-manager repos --enable=rhel-7-server-rpms --enable=rhel-7-server-optional-rpms --enable=rhel-7-server-extras-rpms --enable=rhel-7-server-rh-common-rpms && \
+    yum install -y libcurl-devel nss-devel libxml2-devel gcc && \
     yum clean all && \
     rm -rf /var/cache/yum
 RUN mkdir -p /var/lib/awx/venv/ansible_ovirt
 RUN virtualenv --system-site-packages /var/lib/awx/venv/ansible_ovirt
 RUN cp -a /var/lib/awx/venv/ansible/lib64/python2.7/site-packages/* /var/lib/awx/venv/ansible_ovirt/lib64/python2.7/site-packages/
 RUN export PYCURL_SSL_LIBRARY=nss ; sh -c ". /var/lib/awx/venv/ansible_ovirt/bin/activate ; pip install --upgrade ovirt-engine-sdk-python ansible"
-RUN yum erase -y libcurl-devel nss-devel libxml2-devel gcc && \
+RUN yum erase -y libcurl-devel nss-devel libxml2-devel gcc && \ 
     yum clean all && \
     rm -rf /var/cache/yum
 
 Commands to build this dockerfile assuming it is in folder tower_venv.
-podman build ./tower_venv --squash
-buildah tag <new_image_id> docker-registry-default.apps.internal.croftvillas.com/tower-prod/ansible-tower:3.5.0
-podman login --authfile=/tmp/auth.json --tls-verify=false  -p <magic_token> -u unused docker-registry-default.apps.internal.croftvillas.com
-podman push --authfile=/tmp/auth.json --tls-verify=false docker://docker-registry-default.apps.internal.croftvillas.com/tower-prod/ansible-tower:3.5.0
+buildah bud --build-arg RHN_USER=pcornelius@redhat.com --build-arg RHN_PASS=<password> ./tower_venv 
+podman login --authfile=/tmp/auth.json --tls-verify=false -p <token> -u unused registry.apps.ocp41.internal.croftvillas.com/project/tower-prod
+podman images
+buildah tag <image> registry.apps.ocp41.internal.croftvillas.com/tower-prod/ansible-tower:3.5.0
+podman push --authfile=/tmp/auth.json --tls-verify=false registry.apps.ocp41.internal.croftvillas.com/tower-prod/ansible-tower:3.5.0
 
 Where tower-prod is the namespace in openshift where my tower instance is running
 
