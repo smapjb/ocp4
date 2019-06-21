@@ -63,7 +63,7 @@
   - name: <Multiple Machines> Get all the info including the mac addrs
     ovirt_vm_facts:
       auth: "{{ ovirt_auth }}"
-      pattern: "{{ hostname_prefix[0] }}{{ sequence_start }} {{ search_pattern | join(' ') }}"
+      pattern: "{{ hostname_prefix[0] }}{{ sequence_start }}.{{ cluster_name }}.{{ domain_name }} {{ search_pattern | join(' ') }}"
       fetch_nested: true
       nested_attributes: mac
     until: (ovirt_vms | length) > 0 and (ovirt_vms | first | json_query(query))
