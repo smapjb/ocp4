@@ -61,7 +61,7 @@
         description: "{{ cluster_name }} {{node_type}}"
         comment: "{{ cluster_name }}"
 #        template: rhel7_template
-        template: template.phx.dmitry.redhat.com
+        template: dmitry-template
         fetch_nested: true
         nested_attributes:
           - mac
