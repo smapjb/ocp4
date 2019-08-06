@@ -8,6 +8,7 @@
       url: "https://{{ rhev_manager_host }}/ovirt-engine/api"
       username: "{{ ovirt_username }}"
       ca_file: ../pki-resource.cer
+      insecure: yes
       password: "{{ ovirt_password }}"
 
     # Create the hosts_file data model
