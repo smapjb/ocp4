@@ -7,7 +7,7 @@ rhev_manager_host: "rhevm.{{ domain_name }}"
 cluster_name: 'ocp4'
 rhcos_version: '4.1.0'
 
-ovirt_username: dshevrin@internal
+ovirt_username: pcorneli@salab.redhat.com
 
 node_type: worker
 host_memory: 8
