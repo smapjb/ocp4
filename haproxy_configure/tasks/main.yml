@@ -8,11 +8,6 @@
   register: subscribed
 
 - block:
-  - name: Removing Katello
-    yum:
-      state: absent
-      name: katello-ca-consumer-capsule.phx.dmitry.redhat.com-1.0-1.noarch
-
   - name: Subscribe this system to the RHN
     redhat_subscription:
       state: present
