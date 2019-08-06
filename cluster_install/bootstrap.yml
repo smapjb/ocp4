@@ -6,8 +6,7 @@
   vars:
     # use a file called bootstrap as a flag to determine whether this is first run or not
     file_exists: "{{ lookup('first_found', './' + cluster_name + '/bootstrap', errors='ignore' ) }}"
-#    domain_name: internal.croftvillas.com
-    domain_name: phx.dmitry.redhat.com
+
   roles:
     # Download the installation program and set up the boot resources and ignition config
     - pre_install
