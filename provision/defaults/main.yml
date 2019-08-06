@@ -1,13 +1,13 @@
 ---
 # defaults file for provision
 #domain_name: internal.croftvillas.com
-domain_name: phx.dmitry.redhat.com
+domain_name: phx.salab.redhat.com
 gateway: "gateway.{{ domain_name }}"
-rhev_manager_host: "rhvm.{{ domain_name }}"
+rhev_manager_host: "rhevm.{{ domain_name }}"
 cluster_name: 'ocp4'
 rhcos_version: '4.1.0'
 
-ovirt_username: admin@internal
+ovirt_username: dshevrin@internal
 
 node_type: worker
 host_memory: 8
