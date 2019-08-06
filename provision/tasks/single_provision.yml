@@ -47,7 +47,7 @@
           - name: "{{ hostname_prefix[0] }}_{{ cluster_name }}_disk"
         nics:
           - name: nic1
-            profile_name: "ovirtmgmt"
+            profile_name: "Sandbox2"
     when: machine_type == "rhcos"
 
   - block:
@@ -70,6 +70,9 @@
         cpu_sockets: "{{ sockets }}"
         graphical_console:
           protocol: vnc
+        nics:
+          - name: nic1
+            profile_name: "Sandbox2"
         cloud_init:
           host_name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
           authorized_ssh_keys: "{{ ssh_key }}"
