@@ -11,7 +11,7 @@
       password: "{{ ovirt_password }}"
 
     # Create the hosts_file data model
-  - include_tasks: construct_hosts_dict.yml
+#  - include_tasks: construct_hosts_dict.yml
 
   - name: Provisioning a single machine
     include_tasks: single_provision.yml

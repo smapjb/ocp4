@@ -1,6 +1,7 @@
 ---
 # defaults file for provision
-domain_name: internal.croftvillas.com
+#domain_name: internal.croftvillas.com
+domain_name: phx.dmitry.redhat.com
 gateway: "gateway.{{ domain_name }}"
 rhev_manager_host: "rhvm.{{ domain_name }}"
 cluster_name: 'ocp4'
