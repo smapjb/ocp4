@@ -18,7 +18,7 @@
 
 # Now that all the machines have been provisioned we can configure haproxy (validation of the config will fail if machines are not set up correctly)
 - name: Install and configure haproxy
-  hosts: "haproxy.{{ cluster_name }}.internal.croftvillas.com"
+  hosts: "haproxy.{{ cluster_name }}.{{ domain_name }}"
   remote_user: root
 
   roles:
