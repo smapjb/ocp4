@@ -50,7 +50,7 @@ Router - need to open up the default route for the registry
 oc patch configs.imageregistry.operator.openshift.io/cluster --type merge -p '{"spec":{"defaultRoute":true}}'
 
 // or to subsequently mount NFS patch as follows
-oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"storage":{"pvc":{"claim"}}}}'
+oc patch configs.imageregistry.operator.openshift.io/cluster --type merge --patch '{"spec":{"storage":{"pvc":{"claim"}}}}'
 
 
 
@@ -86,4 +86,8 @@ podman push --authfile=/tmp/auth.json --tls-verify=false registry.apps.ocp41.int
 
 Where tower-prod is the namespace in openshift where my tower instance is running
 
-Inside openshift change stateful set to refer to image as docker-registry.default.svc:5000/tower-prod/ansible-tower:3.5.0
+Inside openshift change stateful set to refer to image as image-registry.openshift-image-registry.svc:5000/tower-prod/ansible-tower:3.5.0
+
+--- Template service broker - is an external service broker that will retrieve templates for a load of technologies such as postgres, jboss etc
+This service broker concept has been replaced by the idea of an operator.
+
