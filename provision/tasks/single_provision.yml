@@ -24,7 +24,7 @@
     - name: <Single Machine RHCOS> Create a RHCOS machine to boot off of the pre-install ignition
       ovirt_vm:
         auth: "{{ ovirt_auth }}"
-        cluster: "Cluster01"
+        cluster: "{{ rhv_cluster_name }}"
         name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
         description: "{{ cluster_name }} {{node_type}}"
         comment: "{{ cluster_name }}"
