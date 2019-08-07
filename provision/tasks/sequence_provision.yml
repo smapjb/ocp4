@@ -34,7 +34,7 @@
   - name: <Multiple Machines> Remove the kernel boot parameters from the newly created machine
     ovirt_vm:
       auth: "{{ ovirt_auth }}"
-      cluster: "Cluster01"
+      cluster: "{{ rhv_cluster_name }}"
       name: "{{ hostname_prefix[0] }}{{ item }}.{{ cluster_name }}.{{ domain_name }}"
       state: running
       type: server
