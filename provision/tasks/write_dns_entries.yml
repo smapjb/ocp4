@@ -69,7 +69,7 @@
       fetch_nested: true
       nested_attributes: mac
     until: (ovirt_vms | length) > 0 and (ovirt_vms | first | json_query(query))
-    retries: 5
+    retries: 20
     delay: 2
     vars:
       query: "nics[*].mac.address"
@@ -86,7 +86,7 @@
       headers:
          x-api-key: "{{ apikey }}"
     until: (leases.json.data | dict2items | json_query(query) | length) > 0
-    retries: 10
+    retries: 20
     delay: 5
     vars:
       query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ ovirt_vms[item|int].nics[0].mac.address }}'].ipv4"
