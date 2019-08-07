@@ -22,9 +22,9 @@
     operating_system: "rhel_8x64"
     disks:
       - name: "{{ hostname_prefix[0] }}{{ item }}_{{ cluster_name }}_disk"
-    nics:
-      - name: nic1
-        profile_name: "ovirtmgmt"
+      nics:
+        - name: nic1
+          profile_name: "Sandbox2"
   async: '300'
   poll: '0'
   with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="%01d"
