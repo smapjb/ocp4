@@ -7,7 +7,7 @@ gateway: "gateway.hackfest-brno.redhat.com"
 rhev_manager_host: "rhevm.phx.salab.redhat.com"
 cluster_name: 'ocp4'
 rhcos_version: '4.1.0'
-
+storage_domain: 'RHEV-Gluster'
 ovirt_username: pcorneli@salab.redhat.com
 
 node_type: worker

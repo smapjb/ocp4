@@ -16,7 +16,7 @@
         auth: "{{ ovirt_auth }}"
         name: "{{ hostname_prefix[0] }}_{{ cluster_name }}_disk"
         size: "{{ disk_size }}GiB"
-        storage_domain: QNAP_SD
+        storage_domain: "{{ storage_domain }}"
         interface: virtio
       register: new_disks
 
