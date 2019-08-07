@@ -8,7 +8,8 @@ gateway: "gateway.hackfest-brno.redhat.com"
 iso_domain: RHEV_ISOS
 #rhev_manager: rhvm.internal.croftvillas.com
 rhev_manager: rhvm.phx.dmitry.redhat.com
-openshift_deps_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.1/latest
+#openshift_deps_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.1/latest
+openshift_deps_url: http://10.3.77.200/pub
 openshift_clients_url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest
 
 
