@@ -86,7 +86,7 @@
       headers:
          x-api-key: "{{ apikey }}"
     until: (leases.json.data | dict2items | json_query(query) | length) > 0
-    retries: 20
+    retries: 40
     delay: 5
     vars:
       query: "[].{mac: value.mac ipv4: value.ip}[?mac == '{{ ovirt_vms[item|int].nics[0].mac.address }}'].ipv4"
