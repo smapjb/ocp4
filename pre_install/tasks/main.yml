@@ -73,7 +73,8 @@
 
   # Note that I had to add passord to isouploader.conf, also ISO domain name is hard wired
   - name: Upload the kernel and ram disk images to the RHV iso domain via the RHV manager
-    command: "engine-iso-uploader --iso-domain={{ iso_domain }} upload /tmp/{{ item }} --force"
+#    command: "engine-iso-uploader --iso-domain={{ iso_domain }} upload /tmp/{{ item }} --force"
+    command: "engine-iso-uploader -i {{ iso_domain }} -r rhevm.phx.salab.redhat.com upload /tmp/{{ item }} --insecure --force"
     remote_user: root
     delegate_to: "{{ rhev_manager }}"
     with_items:
