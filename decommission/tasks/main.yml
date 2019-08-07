@@ -8,6 +8,7 @@
       url: "https://{{ rhev_manager_host }}/ovirt-engine/api"
       username: "{{ ovirt_username }}"
       ca_file: ../pki-resource.cer
+      insecure: yes
       password: "{{ ovirt_password }}"
 
   - name: Check if the machine already exists
