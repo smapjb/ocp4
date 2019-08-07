@@ -2,7 +2,7 @@
 - name: Create new VMs
   ovirt_vm:
     auth: "{{ ovirt_auth }}"
-    cluster: "Cluster01"
+    cluster: "{{ rhv_cluster_name }}"
     name: "{{ hostname_prefix[0] }}{{ item }}.{{ cluster_name }}.{{ domain_name }}"
     description: "{{ cluster_name }} {{ node_type }}"
     comment: "{{ cluster_name }}"

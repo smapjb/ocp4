@@ -8,6 +8,7 @@ rhev_manager_host: "rhevm.phx.salab.redhat.com"
 cluster_name: 'ocp4'
 rhcos_version: '4.1.0'
 storage_domain: 'RHEV-Gluster'
+rhv_cluster_name: "Primary-Demo"
 ovirt_username: pcorneli@salab.redhat.com
 
 rhel7_template: 'dmitry-rhel77-ocp4-cloudinit-template'
