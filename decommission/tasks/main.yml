@@ -41,6 +41,7 @@
       uri:
         url: "https://{{ gateway }}:81/api/v1/dhcp/leases"
         return_content: yes
+        validate_certs: no
         headers:
            x-api-key: "{{ apikey }}"
       register: leases
