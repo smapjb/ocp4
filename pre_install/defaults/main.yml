@@ -5,7 +5,7 @@ cluster_version: '4.1.8'
 rhcos_version: '4.1.0'
 operating_system: 'linux'
 gateway: "gateway.hackfest-brno.redhat.com"
-iso_domain: RHEV_ISOS
+iso_domain: "RHEV-ISOS"
 #rhev_manager: rhvm.internal.croftvillas.com
 rhev_manager: rhvm.phx.dmitry.redhat.com
 #openshift_deps_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.1/latest
