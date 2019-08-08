@@ -1,4 +1,4 @@
-Role Name
+Provision
 =========
 
 This role will provision single and multiple machines suitable for installing an openshift cluster using the baremetal install method. It manages inventory in memory and maintains a datastructure suitable for constructing

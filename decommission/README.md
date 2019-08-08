@@ -1,7 +1,7 @@
-Role Name
+Decommission
 =========
 
-A brief description of the role goes here.
+This role will remove a machine from RHV and remove it from the DNS of clearos
 
 Requirements
 ------------
@@ -23,9 +23,11 @@ Example Playbook
 
 Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
 
-    - hosts: servers
       roles:
-         - { role: username.rolename, x: 42 }
+        - role: decommission
+          hostname_prefix:
+            - bootstrap
+
 
 License
 -------
