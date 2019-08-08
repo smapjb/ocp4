@@ -1,31 +1,52 @@
 Role Name
 =========
 
-A brief description of the role goes here.
+This role will provision single and multiple machines suitable for installing an openshift cluster using the baremetal install method. It manages inventory in memory and maintains a datastructure suitable for constructing
+hosts file entries. 
+The role also updates a dnsmasq style service.
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+The provisioner is for RHV 4.3, and also requires a ClearOS gateway that provides DHCP and DNS to the provisioned machines. clearos.com
+ClearOS has a rest API where we can query what IP has been given to a machine early in the boot cycle. This allows us to set up the DNS correctly which is a 
+hard requirement for an openshift cluster.
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+See default/main.yml
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+Not dependent on any other roles
 
 Example Playbook
 ----------------
 
 Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
 
-    - hosts: servers
+    - name: Provision the permanent cluster master machines and haproxy
+      hosts: localhost
+      gather_facts: False
+    
       roles:
-         - { role: username.rolename, x: 42 }
+        # Cannot asyncronously loop over an include or role - and looping over a role include is about as many lines of code for the number of machines that we are provisioning
+        # Best option is to add async directly into the provision role and pass a sequence start / end variables
+        - role: provision
+          single_machine: False
+          sequence_start: 0
+          sequence_end: 2
+          host_memory: 16
+          sockets: 4
+          disk_size: 40
+          machine_type: rhcos
+          node_type: master
+          hostname_prefix:
+            - master0
+            - etcd-
+
 
 License
 -------
