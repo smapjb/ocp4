@@ -54,7 +54,7 @@
 
     - name: Construct the /etc/hosts file line for the decommissioned server
       set_fact:
-        the_line: "{{ the_line|default([]) + [ item + '.' + cluster_name + domain_name ] }}"
+        the_line: "{{ the_line|default([]) + [ item + '.' + cluster_name + '.' + domain_name ] }}"
       with_items:
         - "{{ hostname_prefix }}"
 
