@@ -1,17 +1,16 @@
 ---
 # defaults file for provision
-#domain_name: internal.croftvillas.com
-domain_name: hackfest-brno.redhat.com
-#gateway: "gateway.{{ domain_name }}"
-gateway: "gateway.hackfest-brno.redhat.com"
-rhev_manager_host: "rhevm.phx.salab.redhat.com"
+domain_name: internal.croftvillas.com
+gateway: "gateway.internal.croftvillas.com"
+rhev_manager_host: "rhvm.{{ domain_name }}"
 cluster_name: 'ocp4'
 rhcos_version: '4.1.0'
-storage_domain: 'RHEV-Gluster'
-rhv_cluster_name: "Primary-Demo"
-ovirt_username: pcorneli@salab.redhat.com
+storage_domain: 'QNAP_SD'
+rhv_cluster_name: "Cluster01"
+ovirt_username: admin@internal
 
-rhel7_template: 'dmitry-rhel77-ocp4-cloudinit-template'
+rhel7_template: 'rhel7_template'
+nic_profile_name: "ovirtmgmt"
 
 node_type: worker
 host_memory: 8

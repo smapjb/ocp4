@@ -1,13 +1,12 @@
 ---
 # defaults file for decommission
 
-domain_name: hackfest-brno.redhat.com
-#gateway: "gateway.{{ domain_name }}"
-gateway: "gateway.hackfest-brno.redhat.com"
+domain_name: internal.croftvillas.com
+gateway: "gateway.internal.croftvillas.com"
 rhev_manager_host: "rhevm.phx.salab.redhat.com"
 cluster_name: 'ocp4'
 rhcos_version: '4.1.0'
-storage_domain: 'RHEV-Gluster'
-rhv_cluster_name: "Primary-Demo"
-ovirt_username: pcorneli@salab.redhat.com
+storage_domain: 'QNAP_SD'
+rhv_cluster_name: "Cluster01"
+ovirt_username: admin@internal
 

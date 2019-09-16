@@ -47,7 +47,7 @@
           - name: "{{ hostname_prefix[0] }}_{{ cluster_name }}_disk"
         nics:
           - name: nic1
-            profile_name: "Sandbox2"
+            profile_name: "{{ nic_profile_name }}"
     when: machine_type == "rhcos"
 
   - block:
@@ -71,7 +71,7 @@
           protocol: vnc
         nics:
           - name: nic1
-            profile_name: "Sandbox2"
+            profile_name: "{{ nic_profile_name }}"
         cloud_init:
           host_name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
           authorized_ssh_keys: "{{ ssh_key }}"

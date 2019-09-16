@@ -33,7 +33,7 @@
     file:
       path: "/var/www/html/{{cluster_name }}"
       state: directory
-      group: apache
+      group: allusers
       mode: '0755'
     remote_user: root
     delegate_to: "{{ gateway }}"
@@ -42,7 +42,7 @@
     copy:
       src: "{{ cluster_name }}/{{ item }}"
       dest: "/var/www/html/{{ cluster_name }}/{{ item }}"
-      group: apache
+      group: allusers
       mode: '0644'
     remote_user: root
     delegate_to: "{{ gateway }}"
@@ -55,7 +55,7 @@
     get_url:
       url: "{{ openshift_deps_url }}/rhcos-{{ rhcos_version }}-x86_64-metal-bios.raw.gz"
       dest: "/var/www/html"
-      group: apache
+      group: allusers
       mode: '0644'
     remote_user: root
     delegate_to: "{{ gateway }}"
@@ -73,8 +73,7 @@
 
   # Note that I had to add passord to isouploader.conf, also ISO domain name is hard wired
   - name: Upload the kernel and ram disk images to the RHV iso domain via the RHV manager
-#    command: "engine-iso-uploader --iso-domain={{ iso_domain }} upload /tmp/{{ item }} --force"
-    command: "engine-iso-uploader -i {{ iso_domain }} -r rhevm.phx.salab.redhat.com upload /tmp/{{ item }} --insecure --force"
+    command: "engine-iso-uploader -i {{ iso_domain }} upload /tmp/{{ item }} --insecure --force"
     remote_user: root
     delegate_to: "{{ rhev_manager }}"
     with_items:

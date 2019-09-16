@@ -24,7 +24,7 @@
       - name: "{{ hostname_prefix[0] }}{{ item }}_{{ cluster_name }}_disk"
     nics:
       - name: nic1
-        profile_name: "Sandbox2"
+        profile_name: "{{ nic_profile_name }}"
   async: '300'
   poll: '0'
   with_sequence: start="{{ sequence_start }}" end="{{ sequence_end }}" format="%01d"
