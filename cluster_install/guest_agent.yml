@@ -6,7 +6,7 @@
   become: true
 
   vars:
-    guest_agent: "http://rpmfind.net/linux/centos/7.6.1810/os/x86_64/Packages/qemu-guest-agent-2.12.0-2.el7.x86_64.rpm"
+    guest_agent: "http://rpmfind.net/linux/centos/7.7.1908/os/x86_64/Packages/qemu-guest-agent-2.12.0-3.el7.x86_64.rpm"
 
   tasks:
     - name: Install the guest agent on the new node
