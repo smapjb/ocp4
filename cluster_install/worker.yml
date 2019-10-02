@@ -5,8 +5,8 @@
   roles:
     - role: provision
       single_machine: False
-      sequence_start: 0
-      sequence_end: 2
+      sequence_start: 3
+      sequence_end: 4
       host_memory: 8
       sockets: 2
       disk_size: 20
