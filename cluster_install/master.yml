@@ -11,7 +11,7 @@
       sequence_end: 2
       host_memory: 16
       sockets: 4
-      disk_size: 80
+      disk_size: 40
       machine_type: rhcos
       node_type: master
       hostname_prefix:

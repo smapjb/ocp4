@@ -5,12 +5,12 @@ gateway: "gateway.internal.croftvillas.com"
 rhev_manager_host: "rhvm.{{ domain_name }}"
 cluster_name: 'ocp4'
 rhcos_version: '4.1.0'
-storage_domain: 'QNAP_SD'
+storage_domain: 'QNAP_ISCSI'
 rhv_cluster_name: "Cluster01"
 ovirt_username: admin@internal
 
 rhel7_template: 'rhel7_template'
-nic_profile_name: "ovirtmgmt"
+nic_profile_name: "prod_network"
 
 node_type: worker
 host_memory: 8
