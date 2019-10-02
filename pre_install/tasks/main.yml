@@ -66,7 +66,7 @@
       url: "{{ openshift_deps_url }}/{{ item }}"
       dest: "/tmp"
     remote_user: root
-    delegate_to: "{{ rhev_manager }}"
+    delegate_to: "{{ rhev_manager_host }}"
     with_items:
       - "rhcos-{{ rhcos_version }}-x86_64-installer-initramfs.img"
       - "rhcos-{{ rhcos_version }}-x86_64-installer-kernel"
@@ -75,7 +75,7 @@
   - name: Upload the kernel and ram disk images to the RHV iso domain via the RHV manager
     command: "engine-iso-uploader -i {{ iso_domain }} upload /tmp/{{ item }} --insecure --force"
     remote_user: root
-    delegate_to: "{{ rhev_manager }}"
+    delegate_to: "{{ rhev_manager_host }}"
     with_items:
       - "rhcos-{{ rhcos_version }}-x86_64-installer-initramfs.img"
       - "rhcos-{{ rhcos_version }}-x86_64-installer-kernel"

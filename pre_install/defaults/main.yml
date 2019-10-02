@@ -6,7 +6,7 @@ rhcos_version: '4.1.0'
 operating_system: 'linux'
 gateway: "gateway.internal.croftvillas.com"
 iso_domain: "QNAP_ISO"
-rhev_manager: rhvm.internal.croftvillas.com
+rhev_manager_host: rhvm.internal.croftvillas.com
 openshift_deps_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.1/latest
 openshift_clients_url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest
 
