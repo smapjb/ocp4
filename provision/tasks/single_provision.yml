@@ -59,7 +59,6 @@
         name: "{{ hostname_prefix[0] }}.{{ cluster_name }}.{{ domain_name }}"
         description: "{{ cluster_name }} {{node_type}}"
         comment: "{{ cluster_name }}"
-#        template: rhel7_template
         template: "{{ rhel7_template }}"
         fetch_nested: true
         nested_attributes:
