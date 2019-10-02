@@ -33,7 +33,7 @@
     file:
       path: "/var/www/html/{{cluster_name }}"
       state: directory
-      group: allusers
+      group: apache
       mode: '0755'
     remote_user: root
     delegate_to: "{{ gateway }}"
@@ -42,7 +42,7 @@
     copy:
       src: "{{ cluster_name }}/{{ item }}"
       dest: "/var/www/html/{{ cluster_name }}/{{ item }}"
-      group: allusers
+      group: apache
       mode: '0644'
     remote_user: root
     delegate_to: "{{ gateway }}"
@@ -55,7 +55,7 @@
     get_url:
       url: "{{ openshift_deps_url }}/rhcos-{{ rhcos_version }}-x86_64-metal-bios.raw.gz"
       dest: "/var/www/html"
-      group: allusers
+      group: apache
       mode: '0644'
     remote_user: root
     delegate_to: "{{ gateway }}"
