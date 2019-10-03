@@ -27,7 +27,7 @@
         patch: '{"spec":{"storage":{"emptyDir":{}}}}'
       environment:
         KUBECONFIG: ./{{ cluster_name }}/auth/kubeconfig
-      retries: 10
+      retries: 20
       delay: 30
       register: result
       until: result.rc == 0
