@@ -10,7 +10,7 @@ rhv_cluster_name: "Cluster01"
 ovirt_username: admin@internal
 
 rhel7_template: 'rhel7_template'
-nic_profile_name: "prod_network"
+nic_profile_name: "lab_network"
 
 node_type: worker
 host_memory: 8
