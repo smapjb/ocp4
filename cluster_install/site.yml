@@ -21,9 +21,6 @@
 # time all hosts are up
 - import_playbook: worker.yml
 
-# Add the workers into the load balancer
-- import_playbook: haproxy.yml
-
 # All hosts are up, bootstrap is complete - install the qemu guest agent
 # And reboot the servers
 # - import_playbook: guest_agent.yml
