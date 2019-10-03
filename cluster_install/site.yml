@@ -26,7 +26,7 @@
 
 # All hosts are up, bootstrap is complete - install the qemu guest agent
 # And reboot the servers
-- import_playbook: guest_agent.yml
+# - import_playbook: guest_agent.yml
 
 # Finalise the install, remove the bootstrap server, reload the
 # load balancer and wait for install scripts to complete
