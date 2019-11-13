@@ -60,9 +60,15 @@ backend httpbackend
 {% for backend in groups['worker']|default([]) %}
     server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ http_port }} check
 {% endfor %}
+{% for backend in groups['master']|default([]) %}
+    server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ http_port }} check
+{% endfor %}
 backend httpsbackend
     balance roundrobin
     mode tcp
 {% for backend in groups['worker']|default([]) %}
+    server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ https_port }} check
+{% endfor %}
+{% for backend in groups['master']|default([]) %}
     server {{ hostvars[backend].inventory_hostname_short }} {{ hostvars[backend].inventory_hostname }}:{{ https_port }} check
 {% endfor %}
