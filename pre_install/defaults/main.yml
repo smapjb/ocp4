@@ -8,7 +8,7 @@ gateway: "gateway.internal.croftvillas.com"
 iso_domain: "QNAP_ISO"
 rhev_manager_host: rhvm.internal.croftvillas.com
 openshift_deps_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.2/latest
-openshift_clients_url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest
+openshift_clients_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ cluster_version }}"
 
 
 #host_memory: 2

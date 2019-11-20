@@ -48,8 +48,7 @@ oc delete secrets kubeadmin -n kube-system
 ---
 Installing wildcard cert for SSL
 oc create secret tls router-certs --cert=./fullchain.cer --key=./api.lab.croftvillas.com.key -n openshift-ingress
-oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec": { "defaultCertificate": { "name": "router-certs" }}}'
-
+oc patch ingresscontroller.operator default -n openshift-ingress-operator --type=merge --patch='{"spec": { "defaultCertificate": { "name": "router-certs" }}}'
 ---
 Router - need to open up the default route for the registry
 oc patch configs.imageregistry.operator.openshift.io/cluster --type merge -p '{"spec":{"defaultRoute":true}}'
