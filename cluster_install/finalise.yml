@@ -28,7 +28,7 @@
       environment:
         KUBECONFIG: ./{{ cluster_name }}/auth/kubeconfig
       retries: 20
-      delay: 30
+      delay: 60
       register: result
       until: result.rc == 0
 
