@@ -13,7 +13,7 @@
 - import_playbook: master.yml
 
 # Provision the workers
-#- import_playbook: worker.yml
+- import_playbook: worker.yml
 
 # Add the workers into the load balancer
 - import_playbook: haproxy.yml
