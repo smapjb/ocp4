@@ -8,7 +8,7 @@
     - role: provision
       single_machine: False
       sequence_start: 0
-      sequence_end: 0
+      sequence_end: 2
       host_memory: 16
       sockets: 4
       disk_size: 60
