@@ -4,7 +4,7 @@
 
   roles:
     - role: provision
-      single_machine: False
+      single_machine: True
       sequence_start: 0
       sequence_end: 1
       host_memory: 8
