@@ -33,7 +33,7 @@
         cpu_sockets: "{{ sockets }}"
         kernel_path: "iso://rhcos-{{ rhcos_version }}-x86_64-installer-kernel"
         initrd_path: "iso://rhcos-{{ rhcos_version }}-x86_64-installer-initramfs.img"
-        kernel_params: "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://{{ gateway }}/rhcos-{{ rhcos_version }}-x86_64-metal-bios.raw.gz coreos.inst.ignition_url=http://{{ gateway }}/{{ cluster_name }}/{{ node_type }}.ign"
+        kernel_params: "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://{{ gateway }}/rhcos-{{ rhcos_version }}-x86_64-metal.raw.gz coreos.inst.ignition_url=http://{{ gateway }}/{{ cluster_name }}/{{ node_type }}.ign"
         kernel_params_persist: yes
         fetch_nested: true
         nested_attributes:
