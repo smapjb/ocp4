@@ -6,8 +6,8 @@
     - role: provision
       single_machine: False
       sequence_start: 0
-      sequence_end: 2
-      host_memory: 16
+      sequence_end: 1
+      host_memory: 8
       sockets: 4
       disk_size: 40
       node_type: worker
