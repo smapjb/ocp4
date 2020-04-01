@@ -5,7 +5,7 @@ domain_name: internal.croftvillas.com
 gateway: "gateway.internal.croftvillas.com"
 rhev_manager_host: "rhvm.{{ domain_name }}"
 cluster_name: 'ocp4'
-rhcos_version: '4.3.0'
+rhcos_version: '4.3.8'
 storage_domain: 'QNAP_ISCSI'
 rhv_cluster_name: "Cluster01"
 ovirt_username: admin@internal
