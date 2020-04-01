@@ -9,7 +9,7 @@
     state: running
     memory: "{{ host_memory }}GiB"
     cpu_sockets: "{{ sockets }}"
-    kernel_path: "iso://rhcos-{{ rhcos_version }}-x86_64-installer-kernel.x86_64"
+    kernel_path: "iso://rhcos-{{ rhcos_version }}-x86_64-installer-kernel-x86_64"
     initrd_path: "iso://rhcos-{{ rhcos_version }}-x86_64-installer-initramfs.x86_64.img"
     kernel_params: "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://{{ gateway }}/rhcos-{{ rhcos_version }}-x86_64-metal.x86_64.raw.gz coreos.inst.ignition_url=http://{{ gateway }}/{{ cluster_name }}/{{ node_type }}.ign"
     kernel_params_persist: yes

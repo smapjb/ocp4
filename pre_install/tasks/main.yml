@@ -69,7 +69,7 @@
     delegate_to: "{{ rhev_manager_host }}"
     with_items:
       - "rhcos-{{ rhcos_version }}-x86_64-installer-initramfs.x86_64.img"
-      - "rhcos-{{ rhcos_version }}-x86_64-installer-kernel.x86_64"
+      - "rhcos-{{ rhcos_version }}-x86_64-installer-kernel-x86_64"
 
   # Note that I had to add passord to isouploader.conf, also ISO domain name is hard wired
   - name: Upload the kernel and ram disk images to the RHV iso domain via the RHV manager
@@ -78,5 +78,5 @@
     delegate_to: "{{ rhev_manager_host }}"
     with_items:
       - "rhcos-{{ rhcos_version }}-x86_64-installer-initramfs.x86_64.img"
-      - "rhcos-{{ rhcos_version }}-x86_64-installer-kernel.x86_64"
+      - "rhcos-{{ rhcos_version }}-x86_64-installer-kernel-x86_64"
   when: cluster_install_exists.changed
