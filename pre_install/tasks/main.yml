@@ -53,7 +53,7 @@
 
   - name: Download the bios image for the boot
     get_url:
-      url: "{{ openshift_deps_url }}/rhcos-{{ rhcos_version }}-x86_64-metal.raw.gz"
+      url: "{{ openshift_deps_url }}/rhcos-{{ rhcos_version }}-x86_64-metal.x86_64.raw.gz"
       dest: "/var/www/html"
       group: apache
       mode: '0644'
